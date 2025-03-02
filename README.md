@@ -44,7 +44,7 @@ Clone the repository and install dependencies:
 ```sh
 git clone https://github.com/SHi-ON/ManeuverGPT.git
 cd ManeuverGPT
-uv pip install
+uv sync
 ```
 
 Ensure **CARLA** is installed and running before executing the scripts.
