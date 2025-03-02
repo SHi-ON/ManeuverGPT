@@ -1,0 +1,14 @@
+[project]
+name = "maneuvergpt"
+version = "0.1.0"
+description = "Agentic Control for Safe Autonomous Stunt Maneuvers"
+readme = "README.md"
+authors = [
+    { name = "SHi-ON", email = "shawn@azdam.com" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+maneuvergpt = "maneuvergpt:main"
+
