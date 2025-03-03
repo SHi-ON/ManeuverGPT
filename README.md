@@ -4,6 +4,12 @@
 
 <h1 align="center">ManeuverGPT</h1>
 
+<p align="center">
+  <a href="https://www.youtube.com/playlist?list=PLMcjQ-k9Bg8RPpmOUefSjn8F1C1TC2hTX" target="_blank">
+    <img src="https://img.shields.io/badge/YouTube-FF0000?style=flat&logo=youtube&logoColor=white&labelColor=black&borderRadius=20" alt="YouTube Badge">
+  </a>
+</p>
+
 <h3 align="center">Agentic Control for Safe Autonomous Stunt Maneuvers</h3>
 
 
