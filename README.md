@@ -1,6 +1,11 @@
-# ManeuverGPT
+<p align="center">
+  <img src="res/ManeuverGPT-logo.png" alt="ManeuverGPT Logo" width="200">
+</p>
 
-### Agentic Control for Safe Autonomous Stunt Maneuvers
+<h1 align="center">ManeuverGPT</h1>
+
+<h3 align="center">Agentic Control for Safe Autonomous Stunt Maneuvers</h3>
+
 
 ## Overview
 
