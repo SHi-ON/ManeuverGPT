@@ -1,0 +1,42 @@
+{
+  "phase_1": {
+    "throttle": 1.0,
+    "steering_angle": 0.0,
+    "reverse": true,
+    "brake": 0.0,
+    "duration": 3.0
+  },
+  "phase_2": {
+    "throttle": 0.7,
+    "steering_angle": 0.8,
+    "reverse": true,
+    "brake": 0.0,
+    "duration": 0.6
+  },
+  "phase_3": {
+    "throttle": 0.9,
+    "steering_angle": -0.5,
+    "reverse": false,
+    "brake": 0.0,
+    "duration": 0.4
+  },
+  "phase_4": {
+    "throttle": 0.5,
+    "steering_angle": 0.0,
+    "reverse": false,
+    "brake": 0.0,
+    "duration": 1.2
+  },
+  "phase_5": {
+    "throttle": 0.0,
+    "steering_angle": 0.0,
+    "reverse": false,
+    "brake": 0.9,
+    "duration": 0.0
+  },
+  "success_conditions": {
+    "max_roll": 0.4,
+    "min_speed": 10.0,
+    "max_tilt": 0.3
+  }
+}

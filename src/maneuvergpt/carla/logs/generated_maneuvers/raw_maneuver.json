@@ -1,0 +1,44 @@
+```json
+{
+    "phase_1": {
+        "throttle": 0.5,
+        "steering_angle": -30,
+        "reverse": true,
+        "brake": 0.0,
+        "duration": 2.0
+    },
+    "phase_2": {
+        "throttle": 0.5,
+        "steering_angle": -30,
+        "reverse": true,
+        "brake": 0.0,
+        "duration": 1.5
+    },
+    "phase_3": {
+        "throttle": 0.8,
+        "steering_angle": 30,
+        "reverse": false,
+        "brake": 0.0,
+        "duration": 1.0
+    },
+    "phase_4": {
+        "throttle": 1.0,
+        "steering_angle": 15,
+        "reverse": false,
+        "brake": 0.0,
+        "duration": 1.5
+    },
+    "phase_5": {
+        "throttle": 0.0,
+        "steering_angle": 0.0,
+        "reverse": false,
+        "brake": 1.0,
+        "duration": 2.0
+    },
+    "success_conditions": {
+        "max_roll": 15,
+        "min_speed": 5,
+        "max_tilt": 10
+    }
+}
+```
