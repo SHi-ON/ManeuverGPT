@@ -1,0 +1,2 @@
+ python3 drive.py --mode offline --redis_host localhost --redis_port 6379 --redis_db 0 --redis_queue maneuver_queue
+   python carla/controller/orchestrator.py --mode online --iterations 10 --redis_host localhost --redis_port 6379 --redis_db 0 --redis_queue maneuver_queue --max_workers 5
