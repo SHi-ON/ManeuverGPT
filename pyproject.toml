@@ -7,7 +7,15 @@ authors = [
     { name = "SHi-ON", email = "shawn@azdam.com" }
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "carla",
+    "pygame",
+    "redis",
+    "pydantic",
+    "openai",
+    "crewai",
+    "tqdm",
+]
 
 [project.scripts]
 maneuvergpt = "maneuvergpt:main"
