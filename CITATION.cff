@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this paper or code, please cite it as below."
+title: "ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers"
+authors:
+  - family-names: Azdam
+    given-names: Shawn
+  - family-names: Doma
+    given-names: Pranav
+  - family-names: Arab
+    given-names: Aliasghar Moj
+
+repository-code: "https://github.com/SHi-ON/ManeuverGPT"
+
+preferred-citation:
+  type: article
+  title: "ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers"
+  authors:
+    - family-names: Azdam
+      given-names: Shawn
+    - family-names: Doma
+      given-names: Pranav
+    - family-names: Arab
+      given-names: Aliasghar Moj
+  journal: "arXiv preprint arXiv:2503.09035"
+  year: 2025
+  url: "https://arxiv.org/abs/2503.09035"
