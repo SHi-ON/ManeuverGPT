@@ -95,11 +95,12 @@ python src/main.py --prompt "Execute a J-turn avoiding obstacles."
 If you use ManeuverGPT in your research, please cite:
 
 ```bibtex
-@article{azdam2025maneuvergpt,
-  title={ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers},
-  author={Azdam, Shawn and Doma, Pranav and Arab, Aliasghar Moj},
-  journal={arXiv preprint arXiv:2503.09035},
-  year={2025}
+@article{Azdam_ManeuverGPT_Agentic_Control_2025,
+  author = {Azdam, Shawn and Doma, Pranav and Arab, Aliasghar Moj},
+  journal = {arXiv preprint arXiv:2503.09035},
+  title = {{ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers}},
+  url = {https://arxiv.org/abs/2503.09035},
+  year = {2025}
 }
 ```
 
