@@ -17,6 +17,14 @@
 <h3 align="center">Agentic Control for Safe Autonomous Stunt Maneuvers</h3>
 
 
+📣 **Announcement**: 
+
+###  Paper Accepted to IROS 2025! 🎉
+
+We are excited to announce that our paper has been **accepted for publication at the IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) 2025**, and it has been selected for an **oral presentation**! We appreciate your interest in our work!
+
+---
+
 ## Overview
 
 **ManeuverGPT** is an Agentic framework for generating and executing
