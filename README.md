@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="res/ManeuverGPT-logo.png" alt="ManeuverGPT Logo" width="200">
+  <img src="res/ManeuverGPT-logo.png" alt="ManeuverGPT Logo" width="144">
 </p>
 
 <h1 align="center">ManeuverGPT</h1>
@@ -16,6 +16,14 @@
 
 <h3 align="center">Agentic Control for Safe Autonomous Stunt Maneuvers</h3>
 
+<p align="center">
+  <img src="res/fig_maneuver.png" alt="ManeuverGPT maneuver overview"
+       style="border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.10); border:1.5px solid #e0e0e0; max-width:320px; margin:8px;">
+  <img src="res/fig_agentic.png" alt="ManeuverGPT agentic control diagram"
+       style="border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.10); border:1.5px solid #e0e0e0; max-width:320px; margin:8px;">
+  <br>
+  <em>Maneuver Overview &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; Agentic Control Diagram</em>
+</p>
 
 📣 **Announcement**: 
 
