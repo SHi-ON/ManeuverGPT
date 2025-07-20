@@ -1,4 +1,5 @@
 import pathlib
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -20,19 +21,26 @@ def normalize_time(df):
     :return: DataFrame with an added 'time' column starting from zero
     """
     df = df.copy()
-    df['time'] = (
-        df['timestamp'] - df['timestamp'].min()
-    ) / 1000.0  # Convert to seconds
+    # Convert to seconds
+    df['time'] = (df['timestamp'] - df['timestamp'].min()) / 1000.0
     return df
 
 
 def calculate_rotational_velocity(df):
     """
     Calculate rotational velocity ('v_rot') from the 'yaw' changes over time.
+    Deprecated: Use 'yaw_rate' column directly if available.
 
     :param df: DataFrame with 'yaw' and 'time' columns
     :return: DataFrame with an added 'v_rot' column
     """
+    warnings.warn(
+        message='calculate_rotational_velocity is deprecated and'
+        ' will be removed in a future release.',
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+
     df = df.copy()
     df['v_rot'] = df['yaw'].diff() / df['time'].diff()
     df['v_rot'].fillna(0, inplace=True)  # Handle NaN for the first row
@@ -229,7 +237,10 @@ def main(test_mode=False, num_files=None):
                 print(f"Skipping {file_path}: 'timestamp' column missing.\n")
                 continue
             df = normalize_time(df)
-            df = calculate_rotational_velocity(df)
+
+            # Deprecated: use 'yaw_rate' column instead of calculating 'v_rot'
+            # df = calculate_rotational_velocity(df)
+
             # Ensure required velocity columns exist
             for col in velocity_columns:
                 if col not in df.columns:
