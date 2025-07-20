@@ -17,7 +17,7 @@ import carla
 import pygame
 import redis
 from common.util import get_actor_display_name
-from maneuvers.maneuvers import JTurnManeuver
+from maneuvers import JTurnManeuver
 from pygame.locals import (
     K_0,
     K_9,
