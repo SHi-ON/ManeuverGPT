@@ -4,15 +4,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io.export import export_svg
-from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Legend, Span, Label, HoverTool
-from bokeh.palettes import Spectral4
-from bokeh.plotting import figure, show, save, output_file
+from bokeh.models import ColumnDataSource, HoverTool, Label, Span
+from bokeh.plotting import figure, output_file, save
 from scipy.signal import savgol_filter
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 
-geckodriver_path = "/snap/bin/geckodriver"
+geckodriver_path = '/snap/bin/geckodriver'
 
 LOGS_DIR = pathlib.Path(__file__).parent / 'logs'
 
@@ -40,12 +38,13 @@ def load_and_process_data(directory: Path) -> list:
                 angle_error = abs(angle_diff - 180)
                 angle_errors.append(angle_error)
         except Exception as e:
-            print(f"Error processing {csv_file}: {e}")
+            print(f'Error processing {csv_file}: {e}')
     return angle_errors
 
 
-def create_comparison_plot(single_errors: list, multi_errors: list,
-                           output_path: str):
+def create_comparison_plot(
+    single_errors: list, multi_errors: list, output_path: str
+):
     """Create an enhanced Bokeh plot comparing single and multi-agent angle errors"""
     # Create trial numbers
     single_trials = list(range(1, len(single_errors) + 1))
@@ -53,8 +52,12 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
 
     # Create smoothed versions of the data
     # Use savgol_filter for smooth curves
-    window_length = min(15, len(single_errors) - 1 if len(
-        single_errors) % 2 == 0 else len(single_errors) - 2)
+    window_length = min(
+        15,
+        len(single_errors) - 1
+        if len(single_errors) % 2 == 0
+        else len(single_errors) - 2,
+    )
     if window_length < 3:
         window_length = 3
 
@@ -63,15 +66,15 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
 
     # Create the figure with y-axis range limit
     p = figure(
-        title="Angle Error Comparison: Single vs Multi-Agent System",
-        x_axis_label="Trial Number",
-        y_axis_label="Angle Error (degrees)",
+        title='Angle Error Comparison: Single vs Multi-Agent System',
+        x_axis_label='Trial Number',
+        y_axis_label='Angle Error (degrees)',
         width=1200,
         height=800,
         y_range=(0, 40),  # Set fixed y-axis range
-        tools="pan,box_zoom,wheel_zoom,reset,save",
-        background_fill_color="#FFFFFF",
-        border_fill_color="#FFFFFF"
+        tools='pan,box_zoom,wheel_zoom,reset,save',
+        background_fill_color='#FFFFFF',
+        border_fill_color='#FFFFFF',
     )
 
     # Enhanced styling
@@ -86,21 +89,25 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
     p.axis.axis_line_width = 2
 
     # Create data sources with hover information
-    single_source = ColumnDataSource({
-        'x': single_trials,
-        'y': single_errors,
-        'y_smooth': single_smooth,
-        'error': [f'{e:.2f}°' for e in single_errors],
-        'type': ['Single Agent'] * len(single_errors)
-    })
+    single_source = ColumnDataSource(
+        {
+            'x': single_trials,
+            'y': single_errors,
+            'y_smooth': single_smooth,
+            'error': [f'{e:.2f}°' for e in single_errors],
+            'type': ['Single Agent'] * len(single_errors),
+        }
+    )
 
-    multi_source = ColumnDataSource({
-        'x': multi_trials,
-        'y': multi_errors,
-        'y_smooth': multi_smooth,
-        'error': [f'{e:.2f}°' for e in multi_errors],
-        'type': ['Multi Agent'] * len(multi_errors)
-    })
+    multi_source = ColumnDataSource(
+        {
+            'x': multi_trials,
+            'y': multi_errors,
+            'y_smooth': multi_smooth,
+            'error': [f'{e:.2f}°' for e in multi_errors],
+            'type': ['Multi Agent'] * len(multi_errors),
+        }
+    )
 
     # Add hover tool
     hover = HoverTool(
@@ -109,56 +116,81 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
             ('Trial', '@x'),
             ('Error', '@error'),
         ],
-        mode='mouse'
+        mode='mouse',
     )
     p.add_tools(hover)
 
     # Add smoothed lines with darker colors
-    p.line('x', 'y_smooth', source=single_source,
-           line_color='#CC0000',  # Darker red
-           line_width=3,
-           alpha=0.8,
-           legend_label="Single Agent (Smoothed)")
+    p.line(
+        'x',
+        'y_smooth',
+        source=single_source,
+        line_color='#CC0000',  # Darker red
+        line_width=3,
+        alpha=0.8,
+        legend_label='Single Agent (Smoothed)',
+    )
 
-    p.line('x', 'y_smooth', source=multi_source,
-           line_color='#0000CC',  # Darker blue
-           line_width=3,
-           alpha=0.8,
-           legend_label="Multi Agent (Smoothed)")
+    p.line(
+        'x',
+        'y_smooth',
+        source=multi_source,
+        line_color='#0000CC',  # Darker blue
+        line_width=3,
+        alpha=0.8,
+        legend_label='Multi Agent (Smoothed)',
+    )
 
     # Add raw data points with matching darker colors
-    p.scatter('x', 'y', source=single_source,
-              size=6,
-              color='#CC0000',  # Darker red
-              alpha=0.4,
-              legend_label="Single Agent (Raw)",
-              marker='circle')
+    p.scatter(
+        'x',
+        'y',
+        source=single_source,
+        size=6,
+        color='#CC0000',  # Darker red
+        alpha=0.4,
+        legend_label='Single Agent (Raw)',
+        marker='circle',
+    )
 
-    p.scatter('x', 'y', source=multi_source,
-              size=6,
-              color='#0000CC',  # Darker blue
-              alpha=0.4,
-              legend_label="Multi Agent (Raw)",
-              marker='triangle')
+    p.scatter(
+        'x',
+        'y',
+        source=multi_source,
+        size=6,
+        color='#0000CC',  # Darker blue
+        alpha=0.4,
+        legend_label='Multi Agent (Raw)',
+        marker='triangle',
+    )
 
     # Add threshold lines with darker colors
-    optimal_line = Span(location=3.0, dimension='width',
-                        line_color='#006400',  # Dark green
-                        line_dash='dashed',
-                        line_width=3)
-    threshold_line = Span(location=7.0, dimension='width',
-                          line_color='#800080',  # Dark purple
-                          line_dash='dashed',
-                          line_width=3)
+    optimal_line = Span(
+        location=3.0,
+        dimension='width',
+        line_color='#006400',  # Dark green
+        line_dash='dashed',
+        line_width=3,
+    )
+    threshold_line = Span(
+        location=7.0,
+        dimension='width',
+        line_color='#800080',  # Dark purple
+        line_dash='dashed',
+        line_width=3,
+    )
 
     p.add_layout(optimal_line)
     p.add_layout(threshold_line)
 
     # Add threshold labels with larger boxes and text
-    for y, text, color in [(3.0, 'Optimal (3°)', '#006400'),  # Dark green
-                           (7.0, 'Threshold (7°)', '#800080')]:  # Dark purple
+    for y, text, color in [
+        (3.0, 'Optimal (3°)', '#006400'),  # Dark green
+        (7.0, 'Threshold (7°)', '#800080'),
+    ]:  # Dark purple
         label = Label(
-            x=50, y=y,
+            x=50,
+            y=y,
             text=text,
             text_font_size='22pt',  # Increased from 14pt
             text_font_style='bold',
@@ -166,7 +198,7 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
             background_fill_color='white',
             background_fill_alpha=0.7,
             border_line_color=color,
-            border_line_alpha=0.7
+            border_line_alpha=0.7,
         )
         p.add_layout(label)
 
@@ -176,7 +208,7 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
         'std': np.std(single_errors),
         'max': np.max(single_errors),
         'min': np.min(single_errors),
-        'median': np.median(single_errors)
+        'median': np.median(single_errors),
     }
 
     multi_stats = {
@@ -184,7 +216,7 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
         'std': np.std(multi_errors),
         'max': np.max(multi_errors),
         'min': np.min(multi_errors),
-        'median': np.median(multi_errors)
+        'median': np.median(multi_errors),
     }
 
     # Add statistics box with larger size
@@ -205,17 +237,17 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
         background_fill_color='white',
         background_fill_alpha=0.7,
         border_line_color='black',
-        border_line_alpha=0.7
+        border_line_alpha=0.7,
     )
     p.add_layout(stats_label)
 
     # Update legend to reflect smoothing
-    p.legend.click_policy = "hide"
-    p.legend.location = "top_left"
-    p.legend.background_fill_color = "white"
+    p.legend.click_policy = 'hide'
+    p.legend.location = 'top_left'
+    p.legend.background_fill_color = 'white'
     p.legend.background_fill_alpha = 0.8
     p.legend.border_line_width = 2
-    p.legend.border_line_color = "black"
+    p.legend.border_line_color = 'black'
     p.legend.label_text_font_size = '22pt'
     p.legend.label_text_font_style = 'bold'
 
@@ -223,11 +255,11 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
     smoothing_note = Label(
         x=50,
         y=650,  # Position below stats
-        text=f"Note: Lines smoothed using Savitzky-Golay filter (window: {window_length}, polynomial order: 3)",
+        text=f'Note: Lines smoothed using Savitzky-Golay filter (window: {window_length}, polynomial order: 3)',
         text_font_size='22pt',  # Increased from 10pt
         text_font_style='italic',
         background_fill_color='white',
-        background_fill_alpha=0.7
+        background_fill_alpha=0.7,
     )
     p.add_layout(smoothing_note)
 
@@ -239,10 +271,10 @@ def create_comparison_plot(single_errors: list, multi_errors: list,
     # Save the plot
     output_file(output_path)
     save(p)
-    print(f"Enhanced plot saved to {output_path}")
+    print(f'Enhanced plot saved to {output_path}')
     svg_path = LOGS_DIR / 'angle_error_comparison.svg'
     export_svg(p, filename=str(svg_path), webdriver=driver)
-    print(f"Saved angle_error_comparison.svg to {svg_path}")
+    print(f'Saved angle_error_comparison.svg to {svg_path}')
 
 
 def main():
@@ -252,18 +284,18 @@ def main():
     output_path = LOGS_DIR / 'angle_error_comparison.html'
 
     # Load data
-    print("Loading single agent data...")
+    print('Loading single agent data...')
     single_errors = load_and_process_data(single_dir)
-    print(f"Loaded {len(single_errors)} single agent trials")
+    print(f'Loaded {len(single_errors)} single agent trials')
 
-    print("\nLoading multi agent data...")
+    print('\nLoading multi agent data...')
     multi_errors = load_and_process_data(multi_dir)
-    print(f"Loaded {len(multi_errors)} multi agent trials")
+    print(f'Loaded {len(multi_errors)} multi agent trials')
 
     # Create comparison plot
-    print("\nCreating comparison plot...")
+    print('\nCreating comparison plot...')
     create_comparison_plot(single_errors, multi_errors, output_path)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

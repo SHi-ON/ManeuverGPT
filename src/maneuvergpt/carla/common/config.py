@@ -1,5 +1,6 @@
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
 
 SYSTEM_PROMPT = """
 You are an autonomous vehicle maneuver configuration generator tasked with creating precise parameters for a J-Turn maneuver. The maneuver consists of 5 distinct phases, each with specific behaviors to ensure a controlled and safe execution.
@@ -98,12 +99,22 @@ from typing import List, Dict
 Generate parameters strictly following this JSON structure. Each phase should be named 'phase_1' through 'phase_5' exactly as shown.
 """
 
+
 class PhaseParameters(BaseModel):
-    throttle: float = Field(..., ge=0.0, le=1.0, description="Throttle value between 0.0 and 1.0")
-    steering_angle: float = Field(..., ge=-1.0, le=1.0, description="Steering angle between -1.0 and 1.0")
+    throttle: float = Field(
+        ..., ge=0.0, le=1.0, description='Throttle value between 0.0 and 1.0'
+    )
+    steering_angle: float = Field(
+        ..., ge=-1.0, le=1.0, description='Steering angle between -1.0 and 1.0'
+    )
     reverse: bool = False
-    brake: float = Field(..., ge=0.0, le=1.0, description="Brake value between 0.0 and 1.0")
-    duration: float = Field(..., ge=0.0, le=5.0, description="Duration in seconds")
+    brake: float = Field(
+        ..., ge=0.0, le=1.0, description='Brake value between 0.0 and 1.0'
+    )
+    duration: float = Field(
+        ..., ge=0.0, le=5.0, description='Duration in seconds'
+    )
+
 
 class ManeuverParameters(BaseModel):
     phase_1: PhaseParameters
@@ -115,45 +126,45 @@ class ManeuverParameters(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "phase_1": {
-                    "throttle": 0.9,
-                    "steering_angle": 0.0,
-                    "reverse": True,
-                    "brake": 0.0,
-                    "duration": 3.0
+            'example': {
+                'phase_1': {
+                    'throttle': 0.9,
+                    'steering_angle': 0.0,
+                    'reverse': True,
+                    'brake': 0.0,
+                    'duration': 3.0,
                 },
-                "phase_2": {
-                    "throttle": 0.7,
-                    "steering_angle": 0.9,
-                    "reverse": True,
-                    "brake": 0.0,
-                    "duration": 0.6
+                'phase_2': {
+                    'throttle': 0.7,
+                    'steering_angle': 0.9,
+                    'reverse': True,
+                    'brake': 0.0,
+                    'duration': 0.6,
                 },
-                "phase_3": {
-                    "throttle": 0.9,
-                    "steering_angle": -0.5,
-                    "reverse": False,
-                    "brake": 0.0,
-                    "duration": 0.4
+                'phase_3': {
+                    'throttle': 0.9,
+                    'steering_angle': -0.5,
+                    'reverse': False,
+                    'brake': 0.0,
+                    'duration': 0.4,
                 },
-                "phase_4": {
-                    "throttle": 0.5,
-                    "steering_angle": 0.0,
-                    "reverse": False,
-                    "brake": 0.0,
-                    "duration": 1.2
+                'phase_4': {
+                    'throttle': 0.5,
+                    'steering_angle': 0.0,
+                    'reverse': False,
+                    'brake': 0.0,
+                    'duration': 1.2,
                 },
-                "phase_5": {
-                    "throttle": 0.0,
-                    "steering_angle": 0.0,
-                    "reverse": False,
-                    "brake": 0.9,
-                    "duration": 0.0
+                'phase_5': {
+                    'throttle': 0.0,
+                    'steering_angle': 0.0,
+                    'reverse': False,
+                    'brake': 0.9,
+                    'duration': 0.0,
                 },
-               
             }
         }
+
 
 class ManeuverCollection(BaseModel):
     maneuvers: List[ManeuverParameters]

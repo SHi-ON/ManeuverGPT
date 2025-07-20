@@ -16,23 +16,70 @@ import sys
 import carla
 import pygame
 import redis
-from pygame.locals import KMOD_CTRL, KMOD_SHIFT, K_0, K_9, K_BACKQUOTE, \
-    K_BACKSPACE, K_COMMA, K_DOWN, K_EQUALS, K_ESCAPE, K_F1, K_LEFT, K_RIGHT, \
-    K_MINUS, K_PERIOD, K_SLASH, K_SPACE, K_TAB, K_UP, K_a, K_b, K_c, K_d, \
-    K_f, K_g, K_h, K_i, K_j, K_l, K_m, K_n, K_o, K_p, K_q, K_r, K_s, K_t, \
-    K_v, K_w, K_x, K_z
-
-from maneuvers.maneuvers import JTurnManeuver
-from sensors import CameraManager, \
-    CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor, RadarSensor
 from common.util import get_actor_display_name
+from maneuvers.maneuvers import JTurnManeuver
+from pygame.locals import (
+    K_0,
+    K_9,
+    K_BACKQUOTE,
+    K_BACKSPACE,
+    K_COMMA,
+    K_DOWN,
+    K_EQUALS,
+    K_ESCAPE,
+    K_F1,
+    K_LEFT,
+    K_MINUS,
+    K_PERIOD,
+    K_RIGHT,
+    K_SLASH,
+    K_SPACE,
+    K_TAB,
+    K_UP,
+    KMOD_CTRL,
+    KMOD_SHIFT,
+    K_a,
+    K_b,
+    K_c,
+    K_d,
+    K_f,
+    K_g,
+    K_h,
+    K_i,
+    K_j,
+    K_l,
+    K_m,
+    K_n,
+    K_o,
+    K_p,
+    K_q,
+    K_r,
+    K_s,
+    K_t,
+    K_v,
+    K_w,
+    K_x,
+    K_z,
+)
+from sensors import (
+    CameraManager,
+    CollisionSensor,
+    GnssSensor,
+    IMUSensor,
+    LaneInvasionSensor,
+    RadarSensor,
+)
 
 
 def find_weather_presets():
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
-    name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
-    presets = [x for x in dir(carla.WeatherParameters) if
-               re.match('[A-Z].+', x)]
+
+    def name(x):
+        return ' '.join(m.group(0) for m in rgx.finditer(x))
+
+    presets = [
+        x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)
+    ]
     return [(getattr(carla.WeatherParameters, x), name(x)) for x in presets]
 
 
@@ -55,8 +102,11 @@ def get_actor_blueprints(world, filter, generation):
         int_generation = int(generation)
         # Check if generation is in available generations
         if int_generation in [1, 2]:
-            bps = [x for x in bps if
-                   int(x.get_attribute('generation')) == int_generation]
+            bps = [
+                x
+                for x in bps
+                if int(x.get_attribute('generation')) == int_generation
+            ]
             return bps
         else:
             logging.warning(message)
@@ -81,7 +131,7 @@ class World(object):
         # blueprint.set_attribute('driver_id', '1')  # Human driver
         # if blueprint.has_attribute('color'):
         #     colors = ['0.0,0.0,0.0', '0.65,0.17,0.17']  # Black, Dodge Red
-        #     blueprint.set_attribute('color', random.choice(colors)) 
+        #     blueprint.set_attribute('color', random.choice(colors))
         self.world = carla_world
         self.sync = args.sync
         self.actor_role_name = args.rolename
@@ -93,21 +143,21 @@ class World(object):
                 self.redis_client = redis.Redis(
                     host=args.redis_host,
                     port=args.redis_port,
-                    db=args.redis_db
+                    db=args.redis_db,
                 )
                 self.redis_client.ping()
                 logging.info(
-                    f"World connected to Redis at {args.redis_host}:{args.redis_port}, DB: {args.redis_db}")
+                    f'World connected to Redis at {args.redis_host}:{args.redis_port}, DB: {args.redis_db}'
+                )
             except redis.exceptions.ConnectionError as e:
-                logging.error(f"World failed to connect to Redis: {e}")
+                logging.error(f'World failed to connect to Redis: {e}')
                 sys.exit(1)
         try:
             self.map = self.world.get_map()
         except RuntimeError as error:
             print(f'RuntimeError: {error}')
             print('The server could not send the OpenDRIVE (.xodr) file:')
-            print(
-                'Ensure it exists, matches the town\'s name, and is correct.')
+            print("Ensure it exists, matches the town's name, and is correct.")
             sys.exit(1)
         self.hud = hud
         self.player = None
@@ -143,38 +193,50 @@ class World(object):
             carla.MapLayer.Props,
             carla.MapLayer.StreetLights,
             carla.MapLayer.Walls,
-            carla.MapLayer.All
+            carla.MapLayer.All,
         ]
 
     def restart(self):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
-        cam_index = self.camera_manager.index if self.camera_manager is not None else 0
-        cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
+        cam_index = (
+            self.camera_manager.index if self.camera_manager is not None else 0
+        )
+        cam_pos_index = (
+            self.camera_manager.transform_index
+            if self.camera_manager is not None
+            else 0
+        )
         # Get a random blueprint.
         blueprint = random.choice(
-            get_actor_blueprints(self.world, self._actor_filter,
-                                 self._actor_generation))
+            get_actor_blueprints(
+                self.world, self._actor_filter, self._actor_generation
+            )
+        )
         blueprint.set_attribute('role_name', self.actor_role_name)
         if blueprint.has_attribute('terramechanics'):
             blueprint.set_attribute('terramechanics', 'true')
         if blueprint.has_attribute('color'):
             color = random.choice(
-                blueprint.get_attribute('color').recommended_values)
+                blueprint.get_attribute('color').recommended_values
+            )
             blueprint.set_attribute('color', color)
         if blueprint.has_attribute('driver_id'):
             driver_id = random.choice(
-                blueprint.get_attribute('driver_id').recommended_values)
+                blueprint.get_attribute('driver_id').recommended_values
+            )
             blueprint.set_attribute('driver_id', driver_id)
         if blueprint.has_attribute('is_invincible'):
             blueprint.set_attribute('is_invincible', 'true')
         # set the max speed
         if blueprint.has_attribute('speed'):
             self.player_max_speed = float(
-                blueprint.get_attribute('speed').recommended_values[1])
+                blueprint.get_attribute('speed').recommended_values[1]
+            )
             self.player_max_speed_fast = float(
-                blueprint.get_attribute('speed').recommended_values[2])
+                blueprint.get_attribute('speed').recommended_values[2]
+            )
 
         spawn_points = self.map.get_spawn_points()
         if not spawn_points:
@@ -184,7 +246,7 @@ class World(object):
 
         try:
             spawn_point = spawn_points[self._spawn_point_index]
-        except Exception as e:
+        except Exception:
             spawn_point = None
 
         # Spawn the player
@@ -201,8 +263,11 @@ class World(object):
             self.modify_vehicle_physics(self.player)
         while self.player is None:
             if not spawn_point:
-                spawn_point = random.choice(spawn_points) if \
-                    spawn_points else carla.Transform()
+                spawn_point = (
+                    random.choice(spawn_points)
+                    if spawn_points
+                    else carla.Transform()
+                )
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
@@ -280,7 +345,8 @@ class World(object):
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
             self.gnss_sensor.sensor,
-            self.imu_sensor.sensor]
+            self.imu_sensor.sensor,
+        ]
         for sensor in sensors:
             if sensor is not None:
                 sensor.stop()
@@ -329,9 +395,11 @@ class KeyboardControl(object):
 
             # If a maneuver is active, update it
             if self.maneuver is not None:
-                if not hasattr(world.player,
-                               'is_alive') or not world.player.is_alive:
-                    logging.error("Vehicle is not valid - resetting maneuver")
+                if (
+                    not hasattr(world.player, 'is_alive')
+                    or not world.player.is_alive
+                ):
+                    logging.error('Vehicle is not valid - resetting maneuver')
                     self.maneuver = None
                     return False
 
@@ -341,10 +409,11 @@ class KeyboardControl(object):
                     post_pos = world.player.get_transform().location
 
                     if pre_pos != post_pos:
-                        logging.info(f"Vehicle moved: {pre_pos} -> {post_pos}")
+                        logging.info(f'Vehicle moved: {pre_pos} -> {post_pos}')
                     else:
                         logging.warning(
-                            "Vehicle position unchanged after update")
+                            'Vehicle position unchanged after update'
+                        )
 
                     if not ongoing:
                         if self.maneuver.save:
@@ -355,8 +424,9 @@ class KeyboardControl(object):
                         if self.mode == 'online' and redis_client:
                             self.check_and_start_maneuver(world, redis_client)
                 except Exception as e:
-                    logging.error(f"Error during maneuver update: {e}")
+                    logging.error(f'Error during maneuver update: {e}')
                     import traceback
+
                     logging.error(traceback.format_exc())
                     self.maneuver = None
 
@@ -380,20 +450,28 @@ class KeyboardControl(object):
                             world.restart()
                     elif event.key == K_F1:
                         world.hud.toggle_info()
-                    elif event.key == K_v and pygame.key.get_mods() & KMOD_SHIFT:
+                    elif (
+                        event.key == K_v and pygame.key.get_mods() & KMOD_SHIFT
+                    ):
                         world.next_map_layer(reverse=True)
                     elif event.key == K_v:
                         world.next_map_layer()
-                    elif event.key == K_b and pygame.key.get_mods() & KMOD_SHIFT:
+                    elif (
+                        event.key == K_b and pygame.key.get_mods() & KMOD_SHIFT
+                    ):
                         world.load_map_layer(unload=True)
                     elif event.key == K_b:
                         world.load_map_layer()
                     elif event.key == K_h or (
-                            event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
+                        event.key == K_SLASH
+                        and pygame.key.get_mods() & KMOD_SHIFT
+                    ):
                         world.hud.help.toggle()
                     elif event.key == K_TAB:
                         world.camera_manager.toggle_camera()
-                    elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
+                    elif (
+                        event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT
+                    ):
                         world.next_weather(reverse=True)
                     elif event.key == K_c:
                         world.next_weather()
@@ -404,18 +482,22 @@ class KeyboardControl(object):
                     elif event.key == K_n:
                         world.camera_manager.next_sensor()
                     elif event.key == K_w and (
-                            pygame.key.get_mods() & KMOD_CTRL):
+                        pygame.key.get_mods() & KMOD_CTRL
+                    ):
                         if world.constant_velocity_enabled:
                             world.player.disable_constant_velocity()
                             world.constant_velocity_enabled = False
                             world.hud.notification(
-                                'Disabled Constant Velocity Mode')
+                                'Disabled Constant Velocity Mode'
+                            )
                         else:
                             world.player.enable_constant_velocity(
-                                carla.Vector3D(17, 0, 0))
+                                carla.Vector3D(17, 0, 0)
+                            )
                             world.constant_velocity_enabled = True
                             world.hud.notification(
-                                'Enabled Constant Velocity Mode at 60 km/h')
+                                'Enabled Constant Velocity Mode at 60 km/h'
+                            )
                     elif event.key == K_o:
                         try:
                             if world.doors_are_open:
@@ -433,13 +515,15 @@ class KeyboardControl(object):
                             world.player.show_debug_telemetry(False)
                             world.show_vehicle_telemetry = False
                             world.hud.notification(
-                                'Disabled Vehicle Telemetry')
+                                'Disabled Vehicle Telemetry'
+                            )
                         else:
                             try:
                                 world.player.show_debug_telemetry(True)
                                 world.show_vehicle_telemetry = True
                                 world.hud.notification(
-                                    'Enabled Vehicle Telemetry')
+                                    'Enabled Vehicle Telemetry'
+                                )
                             except Exception:
                                 pass
                     elif K_0 < event.key <= K_9:
@@ -447,13 +531,16 @@ class KeyboardControl(object):
                         if pygame.key.get_mods() & KMOD_CTRL:
                             index_ctrl = 9
                         world.camera_manager.set_sensor(
-                            event.key - 1 - K_0 + index_ctrl)
+                            event.key - 1 - K_0 + index_ctrl
+                        )
                     elif event.key == K_r and not (
-                            pygame.key.get_mods() & KMOD_CTRL):
+                        pygame.key.get_mods() & KMOD_CTRL
+                    ):
                         world.camera_manager.toggle_recording()
                     elif event.key == K_r and (
-                            pygame.key.get_mods() & KMOD_CTRL):
-                        if (world.recording_enabled):
+                        pygame.key.get_mods() & KMOD_CTRL
+                    ):
+                        if world.recording_enabled:
                             client.stop_recorder()
                             world.recording_enabled = False
                             world.hud.notification('Recorder is OFF')
@@ -462,7 +549,8 @@ class KeyboardControl(object):
                             world.recording_enabled = True
                             world.hud.notification('Recorder is ON')
                     elif event.key == K_p and (
-                            pygame.key.get_mods() & KMOD_CTRL):
+                        pygame.key.get_mods() & KMOD_CTRL
+                    ):
                         # stop recorder
                         client.stop_recorder()
                         world.recording_enabled = False
@@ -473,144 +561,218 @@ class KeyboardControl(object):
                         self._autopilot_enabled = False
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
-                            'Replaying file \'manual_recording.rec\'')
+                            "Replaying file 'manual_recording.rec'"
+                        )
                         # replayer
-                        client.replay_file('manual_recording.rec',
-                                           world.recording_start, 0, 0)
+                        client.replay_file(
+                            'manual_recording.rec', world.recording_start, 0, 0
+                        )
                         world.camera_manager.set_sensor(current_index)
                     elif event.key == K_MINUS and (
-                            pygame.key.get_mods() & KMOD_CTRL):
+                        pygame.key.get_mods() & KMOD_CTRL
+                    ):
                         if pygame.key.get_mods() & KMOD_SHIFT:
                             world.recording_start -= 10
                         else:
                             world.recording_start -= 1
                         world.hud.notification(
-                            f'Recording start time is {world.recording_start}')
+                            f'Recording start time is {world.recording_start}'
+                        )
                     elif event.key == K_EQUALS and (
-                            pygame.key.get_mods() & KMOD_CTRL):
+                        pygame.key.get_mods() & KMOD_CTRL
+                    ):
                         if pygame.key.get_mods() & KMOD_SHIFT:
                             world.recording_start += 10
                         else:
                             world.recording_start += 1
                         world.hud.notification(
-                            f'Recording start time is {world.recording_start}')
+                            f'Recording start time is {world.recording_start}'
+                        )
                     if isinstance(self._control, carla.VehicleControl):
                         if event.key == K_f:
                             # Toggle ackermann controller
-                            self._ackermann_enabled = not self._ackermann_enabled
+                            self._ackermann_enabled = (
+                                not self._ackermann_enabled
+                            )
                             world.hud.show_ackermann_info(
-                                self._ackermann_enabled)
-                            status = 'Enabled' if self._ackermann_enabled else 'Disabled'
+                                self._ackermann_enabled
+                            )
+                            status = (
+                                'Enabled'
+                                if self._ackermann_enabled
+                                else 'Disabled'
+                            )
                             world.hud.notification(
-                                f'Ackermann Controller {status}')
+                                f'Ackermann Controller {status}'
+                            )
                         if event.key == K_q:
                             if not self._ackermann_enabled:
-                                self._control.gear = 1 if self._control.reverse else -1
+                                self._control.gear = (
+                                    1 if self._control.reverse else -1
+                                )
                             else:
                                 self._ackermann_reverse *= -1
                                 # Reset ackermann control
-                                self._ackermann_control = carla.VehicleAckermannControl()
+                                self._ackermann_control = (
+                                    carla.VehicleAckermannControl()
+                                )
                         elif event.key == K_m:
-                            self._control.manual_gear_shift = not self._control.manual_gear_shift
-                            self._control.gear = world.player.get_control().gear
+                            self._control.manual_gear_shift = (
+                                not self._control.manual_gear_shift
+                            )
+                            self._control.gear = (
+                                world.player.get_control().gear
+                            )
                             if self._control.manual_gear_shift:
                                 world.hud.notification('Manual Transmission')
                             else:
                                 world.hud.notification(
-                                    'Automatic Transmission')
+                                    'Automatic Transmission'
+                                )
                         elif event.key == K_COMMA:
-                            self._control.gear = max(-1,
-                                                     self._control.gear - 1)
+                            self._control.gear = max(
+                                -1, self._control.gear - 1
+                            )
                         elif event.key == K_PERIOD:
                             self._control.gear = self._control.gear + 1
-                        elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
+                        elif (
+                            event.key == K_p
+                            and not pygame.key.get_mods() & KMOD_CTRL
+                        ):
                             if not self._autopilot_enabled and not sync_mode:
                                 print(
                                     'WARNING: You are currently in asynchronous mode and could '
-                                    'experience some issues with the traffic simulation')
-                            self._autopilot_enabled = not self._autopilot_enabled
+                                    'experience some issues with the traffic simulation'
+                                )
+                            self._autopilot_enabled = (
+                                not self._autopilot_enabled
+                            )
                             world.player.set_autopilot(self._autopilot_enabled)
-                            autopilot_status = 'On' if self._autopilot_enabled else 'Off'
+                            autopilot_status = (
+                                'On' if self._autopilot_enabled else 'Off'
+                            )
                             world.hud.notification(
-                                f'Autopilot {autopilot_status}')
-                        elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
+                                f'Autopilot {autopilot_status}'
+                            )
+                        elif (
+                            event.key == K_l
+                            and pygame.key.get_mods() & KMOD_CTRL
+                        ):
                             current_lights ^= carla.VehicleLightState.Special1
-                        elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
+                        elif (
+                            event.key == K_l
+                            and pygame.key.get_mods() & KMOD_SHIFT
+                        ):
                             current_lights ^= carla.VehicleLightState.HighBeam
                         elif event.key == K_l:
                             # Use 'L' key to switch between lights:
                             # closed -> position -> low beam -> fog
-                            if not self._lights & carla.VehicleLightState.Position:
+                            if (
+                                not self._lights
+                                & carla.VehicleLightState.Position
+                            ):
                                 world.hud.notification('Position lights')
-                                current_lights |= carla.VehicleLightState.Position
+                                current_lights |= (
+                                    carla.VehicleLightState.Position
+                                )
                             else:
                                 world.hud.notification('Low beam lights')
-                                current_lights |= carla.VehicleLightState.LowBeam
+                                current_lights |= (
+                                    carla.VehicleLightState.LowBeam
+                                )
                             if self._lights & carla.VehicleLightState.LowBeam:
                                 world.hud.notification('Fog lights')
                                 current_lights |= carla.VehicleLightState.Fog
                             if self._lights & carla.VehicleLightState.Fog:
                                 world.hud.notification('Lights off')
-                                current_lights ^= carla.VehicleLightState.Position
-                                current_lights ^= carla.VehicleLightState.LowBeam
+                                current_lights ^= (
+                                    carla.VehicleLightState.Position
+                                )
+                                current_lights ^= (
+                                    carla.VehicleLightState.LowBeam
+                                )
                                 current_lights ^= carla.VehicleLightState.Fog
                         elif event.key == K_i:
                             current_lights ^= carla.VehicleLightState.Interior
                         elif event.key == K_z:
-                            current_lights ^= carla.VehicleLightState.LeftBlinker
+                            current_lights ^= (
+                                carla.VehicleLightState.LeftBlinker
+                            )
                         elif event.key == K_x:
-                            current_lights ^= carla.VehicleLightState.RightBlinker
+                            current_lights ^= (
+                                carla.VehicleLightState.RightBlinker
+                            )
                         elif event.key == K_j:
                             if self.mode == 'online' and redis_client:
                                 try:
                                     result = redis_client.blpop(
-                                        self.command_queue, timeout=5)
+                                        self.command_queue, timeout=5
+                                    )
                                     if result is None:
                                         world.hud.notification(
-                                            "No maneuver parameters available")
+                                            'No maneuver parameters available'
+                                        )
                                     else:
                                         _, maneuver_json = result
-                                        from config.config import \
-                                            ManeuverParameters
+                                        from config.config import (
+                                            ManeuverParameters,
+                                        )
+
                                         params = ManeuverParameters.model_validate_json(
-                                            maneuver_json.decode('utf8'))
+                                            maneuver_json.decode('utf8')
+                                        )
                                         self.maneuver = JTurnManeuver(
                                             world,
                                             maneuver_parameters=params,
                                             base_dir='./logs',
                                             save=True,
-                                            online=True
+                                            online=True,
                                         )
                                         self.maneuver.start(
-                                            pygame.time.get_ticks())
+                                            pygame.time.get_ticks()
+                                        )
                                         world.hud.notification(
-                                            'Starting Maneuver with online parameters')
+                                            'Starting Maneuver with online parameters'
+                                        )
                                         logging.info(
-                                            "J-Turn maneuver started with online parameters")
+                                            'J-Turn maneuver started with online parameters'
+                                        )
                                 except Exception as e:
                                     world.hud.notification(
-                                        "Failed to fetch online maneuver parameters")
+                                        'Failed to fetch online maneuver parameters'
+                                    )
                                     logging.error(
-                                        f"Error fetching online maneuver parameters: {e}")
+                                        f'Error fetching online maneuver parameters: {e}'
+                                    )
                         # Update vehicle lights only if _control is a VehicleControl
                         if isinstance(self._control, carla.VehicleControl):
                             if self._control.brake:
                                 current_lights |= carla.VehicleLightState.Brake
                             else:
-                                current_lights &= ~carla.VehicleLightState.Brake
+                                current_lights &= (
+                                    ~carla.VehicleLightState.Brake
+                                )
                             if self._control.reverse:
-                                current_lights |= carla.VehicleLightState.Reverse
+                                current_lights |= (
+                                    carla.VehicleLightState.Reverse
+                                )
                             else:
-                                current_lights &= ~carla.VehicleLightState.Reverse
-                            if current_lights != self._lights:  # Update only if changed
+                                current_lights &= (
+                                    ~carla.VehicleLightState.Reverse
+                                )
+                            if (
+                                current_lights != self._lights
+                            ):  # Update only if changed
                                 self._lights = current_lights
                                 world.player.set_light_state(
-                                    carla.VehicleLightState(self._lights))
+                                    carla.VehicleLightState(self._lights)
+                                )
 
             if not self._autopilot_enabled and not self.maneuver:
                 if isinstance(self._control, carla.VehicleControl):
-                    self._parse_vehicle_keys(pygame.key.get_pressed(),
-                                             clock.get_time())
+                    self._parse_vehicle_keys(
+                        pygame.key.get_pressed(), clock.get_time()
+                    )
                     self._control.reverse = self._control.gear < 0
                     # Set automatic control-related vehicle lights
                     if self._control.brake:
@@ -621,19 +783,24 @@ class KeyboardControl(object):
                         current_lights |= carla.VehicleLightState.Reverse
                     else:
                         current_lights &= ~carla.VehicleLightState.Reverse
-                    if current_lights != self._lights:  # Change the light state only if necessary
+                    if (
+                        current_lights != self._lights
+                    ):  # Change the light state only if necessary
                         self._lights = current_lights
                         world.player.set_light_state(
-                            carla.VehicleLightState(self._lights))
+                            carla.VehicleLightState(self._lights)
+                        )
                     world.player.apply_control(self._control)
                 elif isinstance(self._control, carla.WalkerControl):
-                    self._parse_walker_keys(pygame.key.get_pressed(),
-                                            clock.get_time(), world)
+                    self._parse_walker_keys(
+                        pygame.key.get_pressed(), clock.get_time(), world
+                    )
                     world.player.apply_control(self._control)
 
         except Exception as e:
-            logging.error(f"Critical error in parse_events: {e}")
+            logging.error(f'Critical error in parse_events: {e}')
             import traceback
+
             logging.error(traceback.format_exc())
             return True
 
@@ -675,15 +842,17 @@ class KeyboardControl(object):
         if keys[K_DOWN] or keys[K_s]:
             self._control.speed = 0.0
         if keys[K_LEFT] or keys[K_a]:
-            self._control.speed = .01
+            self._control.speed = 0.01
             self._rotation.yaw -= 0.08 * milliseconds
         if keys[K_RIGHT] or keys[K_d]:
-            self._control.speed = .01
+            self._control.speed = 0.01
             self._rotation.yaw += 0.08 * milliseconds
         if keys[K_UP] or keys[K_w]:
-            self._control.speed = (world.player_max_speed_fast
-                                   if pygame.key.get_mods() & KMOD_SHIFT
-                                   else world.player_max_speed)
+            self._control.speed = (
+                world.player_max_speed_fast
+                if pygame.key.get_mods() & KMOD_SHIFT
+                else world.player_max_speed
+            )
         self._control.jump = keys[K_SPACE]
         self._rotation.yaw = round(self._rotation.yaw, 1)
         self._control.direction = self._rotation.get_forward_vector()
@@ -691,7 +860,8 @@ class KeyboardControl(object):
     @staticmethod
     def _is_quit_shortcut(key):
         return (key == K_ESCAPE) or (
-                key == K_q and pygame.key.get_mods() & KMOD_CTRL)
+            key == K_q and pygame.key.get_mods() & KMOD_CTRL
+        )
 
     def check_and_start_maneuver(self, world, redis_client):
         """Helper method to check queue and start maneuver"""
@@ -700,24 +870,28 @@ class KeyboardControl(object):
             if result:
                 _, maneuver_json = result
                 from config.config import ManeuverParameters
+
                 params = ManeuverParameters.model_validate_json(
-                    maneuver_json.decode('utf8'))
-                logging.info(f"Received parameters: {params}")
+                    maneuver_json.decode('utf8')
+                )
+                logging.info(f'Received parameters: {params}')
 
                 self.maneuver = JTurnManeuver(
                     world,
                     maneuver_parameters=params,
                     base_dir='./logs',
                     save=True,
-                    online=True
+                    online=True,
                 )
                 self.maneuver.start(pygame.time.get_ticks())
                 world.hud.notification(
-                    'Starting Maneuver with online parameters')
-                logging.info("J-Turn maneuver started with online parameters")
+                    'Starting Maneuver with online parameters'
+                )
+                logging.info('J-Turn maneuver started with online parameters')
         except Exception as e:
-            logging.error(f"Error starting maneuver: {e}")
+            logging.error(f'Error starting maneuver: {e}')
             import traceback
+
             logging.error(traceback.format_exc())
 
 
@@ -779,14 +953,14 @@ class HUD(object):
             f'Map:     {world.map.name.split("/")[-1]:20}',
             f'Simulation time: {str(datetime.timedelta(seconds=int(self.simulation_time))):12}',
             '',
-            f'Speed:   {3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2):15.0f} km/h',
+            f'Speed:   {3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2):15.0f} km/h',
             f'Compass:{compass:17.0f}\N{DEGREE SIGN} {heading:2}',
             f'Accelero: ({ax:5.1f},{ay:5.1f},{az:5.1f})',
             f'Gyroscop: ({gx:5.1f},{gy:5.1f},{gz:5.1f})',
             f'Location:{f"({t.location.x:5.1f}, {t.location.y:5.1f})":>20}',
             f'GNSS:{f"({world.gnss_sensor.lat:2.6f}, {world.gnss_sensor.lon:3.6f})":>24}',
             f'Height:  {t.location.z:18.0f} m',
-            ''
+            '',
         ]
         if isinstance(c, carla.VehicleControl):
             gear_text = {-1: 'R', 0: 'N'}.get(c.gear, c.gear)
@@ -794,34 +968,47 @@ class HUD(object):
                 ('Throttle:', c.throttle, 0.0, 1.0),
                 ('Steer:', c.steer, -1.0, 1.0),
                 ('Brake:', c.brake, 0.0, 1.0),
-                (f'Reverse:', c.reverse),
-                (f'Hand brake:', c.hand_brake),
-                (f'Manual:', c.manual_gear_shift),
-                f'Gear:        {gear_text}'
+                ('Reverse:', c.reverse),
+                ('Hand brake:', c.hand_brake),
+                ('Manual:', c.manual_gear_shift),
+                f'Gear:        {gear_text}',
             ]
             if self._show_ackermann_info:
                 self._info_text += [
                     '',
                     'Ackermann Controller:',
-                    f'  Target speed: {self._ackermann_control.speed * 3.6:8.0f} km/h'
+                    f'  Target speed: {self._ackermann_control.speed * 3.6:8.0f} km/h',
                 ]
         elif isinstance(c, carla.WalkerControl):
             self._info_text += [
                 ('Speed:', c.speed, 0.0, 5.556),
-                ('Jump:', c.jump)
+                ('Jump:', c.jump),
             ]
-        self._info_text += ['', 'Collision:', collision, '',
-                            f'Number of vehicles: {len(vehicles):8d}'
-                            ]
+        self._info_text += [
+            '',
+            'Collision:',
+            collision,
+            '',
+            f'Number of vehicles: {len(vehicles):8d}',
+        ]
         if len(vehicles) > 1:
             self._info_text += ['Nearby vehicles:']
-            distance = lambda l: math.sqrt(
-                (l.x - t.location.x) ** 2 + (l.y - t.location.y) ** 2 + (
-                        l.z - t.location.z) ** 2)
-            vehicles = [(distance(x.get_location()), x) for x in vehicles if
-                        x.id != world.player.id]
-            for d, vehicle in sorted(vehicles,
-                                     key=lambda vehicles: vehicles[0]):
+
+            def distance(l):
+                return math.sqrt(
+                    (l.x - t.location.x) ** 2
+                    + (l.y - t.location.y) ** 2
+                    + (l.z - t.location.z) ** 2
+                )
+
+            vehicles = [
+                (distance(x.get_location()), x)
+                for x in vehicles
+                if x.id != world.player.id
+            ]
+            for d, vehicle in sorted(
+                vehicles, key=lambda vehicles: vehicles[0]
+            ):
                 if d > 200.0:
                     break
                 vehicle_type = get_actor_display_name(vehicle, truncate=22)
@@ -855,39 +1042,50 @@ class HUD(object):
                     break
                 if isinstance(item, list):
                     if len(item) > 1:
-                        points = [(x + 8, v_offset + 8 + (1.0 - y) * 30)
-                                  for x, y in enumerate(item)]
-                        pygame.draw.lines(display, (255, 136, 0), False,
-                                          points, 2)
+                        points = [
+                            (x + 8, v_offset + 8 + (1.0 - y) * 30)
+                            for x, y in enumerate(item)
+                        ]
+                        pygame.draw.lines(
+                            display, (255, 136, 0), False, points, 2
+                        )
                     item = None
                     v_offset += 18
                 elif isinstance(item, tuple):
                     if isinstance(item[1], bool):
-                        rect = pygame.Rect((bar_h_offset, v_offset + 8),
-                                           (6, 6))
-                        pygame.draw.rect(display, (255, 255, 255), rect,
-                                         0 if item[1] else 1)
+                        rect = pygame.Rect(
+                            (bar_h_offset, v_offset + 8), (6, 6)
+                        )
+                        pygame.draw.rect(
+                            display, (255, 255, 255), rect, 0 if item[1] else 1
+                        )
                     else:
-                        rect_border = pygame.Rect((bar_h_offset, v_offset + 8),
-                                                  (bar_width, 6))
-                        pygame.draw.rect(display, (255, 255, 255), rect_border,
-                                         1)
+                        rect_border = pygame.Rect(
+                            (bar_h_offset, v_offset + 8), (bar_width, 6)
+                        )
+                        pygame.draw.rect(
+                            display, (255, 255, 255), rect_border, 1
+                        )
                         f_val = (item[1] - item[2]) / (item[3] - item[2])
                         if item[2] < 0.0:
                             rect = pygame.Rect(
-                                (bar_h_offset + f_val * (bar_width - 6),
-                                 v_offset + 8), (6, 6)
+                                (
+                                    bar_h_offset + f_val * (bar_width - 6),
+                                    v_offset + 8,
+                                ),
+                                (6, 6),
                             )
                         else:
                             rect = pygame.Rect(
                                 (bar_h_offset, v_offset + 8),
-                                (f_val * bar_width, 6)
+                                (f_val * bar_width, 6),
                             )
                         pygame.draw.rect(display, (255, 255, 255), rect)
                     item = item[0]
                 if item:  # At this point has to be a str.
-                    surface = self._font_mono.render(item, True,
-                                                     (255, 255, 255))
+                    surface = self._font_mono.render(
+                        item, True, (255, 255, 255)
+                    )
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
         self._notifications.render(display)
@@ -927,7 +1125,9 @@ class HelpText(object):
         self.line_space = 18
         self.dim = (780, len(lines) * self.line_space + 12)
         self.pos = (
-            0.5 * width - 0.5 * self.dim[0], 0.5 * height - 0.5 * self.dim[1])
+            0.5 * width - 0.5 * self.dim[0],
+            0.5 * height - 0.5 * self.dim[1],
+        )
         self.seconds_left = 0
         self.surface = pygame.Surface(self.dim)
         self.surface.fill((0, 0, 0, 0))
@@ -969,12 +1169,14 @@ def game_loop(args):
             traffic_manager.set_synchronous_mode(True)
 
         if args.autopilot and not sim_world.get_settings().synchronous_mode:
-            print('WARNING: You are currently in asynchronous mode and could '
-                  'experience some issues with the traffic simulation')
+            print(
+                'WARNING: You are currently in asynchronous mode and could '
+                'experience some issues with the traffic simulation'
+            )
 
         display = pygame.display.set_mode(
-            (args.width, args.height),
-            pygame.HWSURFACE | pygame.DOUBLEBUF)
+            (args.width, args.height), pygame.HWSURFACE | pygame.DOUBLEBUF
+        )
         display.fill((0, 0, 0))
         pygame.display.flip()
 
@@ -988,13 +1190,14 @@ def game_loop(args):
                 redis_client = redis.Redis(
                     host=args.redis_host,
                     port=args.redis_port,
-                    db=args.redis_db
+                    db=args.redis_db,
                 )
                 redis_client.ping()
                 logging.info(
-                    f"Connected to Redis at {args.redis_host}:{args.redis_port}, DB: {args.redis_db}")
+                    f'Connected to Redis at {args.redis_host}:{args.redis_port}, DB: {args.redis_db}'
+                )
             except redis.exceptions.ConnectionError as e:
-                logging.error(f"Failed to connect to Redis: {e}")
+                logging.error(f'Failed to connect to Redis: {e}')
                 sys.exit(1)
 
         if args.sync:
@@ -1007,8 +1210,9 @@ def game_loop(args):
             if args.sync:
                 sim_world.tick()
             clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock, args.sync,
-                                       redis_client):
+            if controller.parse_events(
+                client, world, clock, args.sync, redis_client
+            ):
                 return
             world.tick(clock)
             world.render(display)
@@ -1018,7 +1222,7 @@ def game_loop(args):
         if original_settings:
             sim_world.apply_settings(original_settings)
 
-        if (world and world.recording_enabled):
+        if world and world.recording_enabled:
             client.stop_recorder()
 
         if world is not None:
@@ -1029,98 +1233,107 @@ def game_loop(args):
 
 def main():
     argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+        description='CARLA Manual Control Client'
+    )
     argparser.add_argument(
-        '-v', '--verbose',
+        '-v',
+        '--verbose',
         action='store_true',
         dest='debug',
-        help='print debug information')
+        help='print debug information',
+    )
     argparser.add_argument(
         '--host',
         metavar='H',
         default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        help='IP of the host server (default: 127.0.0.1)',
+    )
     argparser.add_argument(
-        '-p', '--port',
+        '-p',
+        '--port',
         metavar='P',
         default=2000,
         type=int,
-        help='TCP port to listen to (default: 2000)')
+        help='TCP port to listen to (default: 2000)',
+    )
     argparser.add_argument(
-        '-a', '--autopilot',
-        action='store_true',
-        help='enable autopilot')
+        '-a', '--autopilot', action='store_true', help='enable autopilot'
+    )
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
         default='1280x720',
-        help='window resolution (default: 1280x720)')
+        help='window resolution (default: 1280x720)',
+    )
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',
         default='vehicle.dodge.charger_2020',  # Changed from 'vehicle.*'
-        help='actor filter (default: "vehicle.dodge.charger_2020")'
+        help='actor filter (default: "vehicle.dodge.charger_2020")',
     )
     argparser.add_argument(
         '--generation',
         metavar='G',
         default='2',  # Ensure this matches Charger's generation
-        help='restrict to certain actor generation (default: "2")'
+        help='restrict to certain actor generation (default: "2")',
     )
     argparser.add_argument(
         '--spawn',
         metavar='SPAWN_POINT',
         default=100,
         type=int,
-        help='spawn point index (default: 100)'
+        help='spawn point index (default: 100)',
     )
     argparser.add_argument(
         '--rolename',
         metavar='NAME',
         default='hero',
-        help='actor role name (default: "hero")')
+        help='actor role name (default: "hero")',
+    )
     argparser.add_argument(
         '--gamma',
         default=2.2,
         type=float,
-        help='Gamma correction of the camera (default: 2.2)')
+        help='Gamma correction of the camera (default: 2.2)',
+    )
     argparser.add_argument(
         '--iterations',
         default=1,
         type=int,
-        help='Number of maneuver iterations to perform'
+        help='Number of maneuver iterations to perform',
     )
     argparser.add_argument(
         '--sync',
         action='store_true',
-        help='Activate synchronous mode execution')
+        help='Activate synchronous mode execution',
+    )
     argparser.add_argument(
         '--mode',
         choices=['offline', 'online'],
         default='offline',
-        help='Operation mode: "offline" or "online" (default: "offline")'
+        help='Operation mode: "offline" or "online" (default: "offline")',
     )
     argparser.add_argument(
         '--redis_host',
         default='localhost',
-        help='Redis server host (default: localhost)'
+        help='Redis server host (default: localhost)',
     )
     argparser.add_argument(
         '--redis_port',
         type=int,
         default=6379,
-        help='Redis server port (default: 6379)'
+        help='Redis server port (default: 6379)',
     )
     argparser.add_argument(
         '--redis_db',
         type=int,
         default=0,
-        help='Redis database number (default: 0)'
+        help='Redis database number (default: 0)',
     )
     argparser.add_argument(
         '--redis_queue',
         default='command_queue',
-        help='Redis queue name (default: command_queue)'
+        help='Redis queue name (default: command_queue)',
     )
 
     args = argparser.parse_args()

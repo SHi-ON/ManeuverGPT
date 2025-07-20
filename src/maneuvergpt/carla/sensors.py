@@ -6,7 +6,6 @@ import carla
 import numpy as np
 import pygame
 from carla import ColorConverter as cc
-
 from common.util import get_actor_display_name
 
 
@@ -22,65 +21,140 @@ class CameraManager(object):
         bound_z = 0.5 + self._parent.bounding_box.extent.z
         Attachment = carla.AttachmentType
 
-        if not self._parent.type_id.startswith("walker.pedestrian"):
+        if not self._parent.type_id.startswith('walker.pedestrian'):
             self._camera_transforms = [
-                (carla.Transform(
-                    carla.Location(x=-2.0 * bound_x, y=+0.0 * bound_y,
-                                   z=2.0 * bound_z),
-                    carla.Rotation(pitch=8.0)), Attachment.SpringArmGhost),
-                (carla.Transform(
-                    carla.Location(x=+0.8 * bound_x, y=+0.0 * bound_y,
-                                   z=1.3 * bound_z)), Attachment.Rigid),
-                (carla.Transform(
-                    carla.Location(x=+1.9 * bound_x, y=+1.0 * bound_y,
-                                   z=1.2 * bound_z)),
-                 Attachment.SpringArmGhost),
-                (carla.Transform(
-                    carla.Location(x=-2.8 * bound_x, y=+0.0 * bound_y,
-                                   z=4.6 * bound_z),
-                    carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
-                (carla.Transform(
-                    carla.Location(x=-1.0, y=-1.0 * bound_y, z=0.4 * bound_z)),
-                 Attachment.Rigid)]
+                (
+                    carla.Transform(
+                        carla.Location(
+                            x=-2.0 * bound_x, y=+0.0 * bound_y, z=2.0 * bound_z
+                        ),
+                        carla.Rotation(pitch=8.0),
+                    ),
+                    Attachment.SpringArmGhost,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(
+                            x=+0.8 * bound_x, y=+0.0 * bound_y, z=1.3 * bound_z
+                        )
+                    ),
+                    Attachment.Rigid,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(
+                            x=+1.9 * bound_x, y=+1.0 * bound_y, z=1.2 * bound_z
+                        )
+                    ),
+                    Attachment.SpringArmGhost,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(
+                            x=-2.8 * bound_x, y=+0.0 * bound_y, z=4.6 * bound_z
+                        ),
+                        carla.Rotation(pitch=6.0),
+                    ),
+                    Attachment.SpringArmGhost,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(
+                            x=-1.0, y=-1.0 * bound_y, z=0.4 * bound_z
+                        )
+                    ),
+                    Attachment.Rigid,
+                ),
+            ]
         else:
             self._camera_transforms = [
-                (carla.Transform(carla.Location(x=-2.5, z=0.0),
-                                 carla.Rotation(pitch=-8.0)),
-                 Attachment.SpringArmGhost),
-                (carla.Transform(carla.Location(x=1.6, z=1.7)),
-                 Attachment.Rigid),
-                (carla.Transform(carla.Location(x=2.5, y=0.5, z=0.0),
-                                 carla.Rotation(pitch=-8.0)),
-                 Attachment.SpringArmGhost),
-                (carla.Transform(carla.Location(x=-4.0, z=2.0),
-                                 carla.Rotation(pitch=6.0)),
-                 Attachment.SpringArmGhost),
-                (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0),
-                                 carla.Rotation(yaw=90.0)), Attachment.Rigid)]
+                (
+                    carla.Transform(
+                        carla.Location(x=-2.5, z=0.0),
+                        carla.Rotation(pitch=-8.0),
+                    ),
+                    Attachment.SpringArmGhost,
+                ),
+                (
+                    carla.Transform(carla.Location(x=1.6, z=1.7)),
+                    Attachment.Rigid,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(x=2.5, y=0.5, z=0.0),
+                        carla.Rotation(pitch=-8.0),
+                    ),
+                    Attachment.SpringArmGhost,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(x=-4.0, z=2.0),
+                        carla.Rotation(pitch=6.0),
+                    ),
+                    Attachment.SpringArmGhost,
+                ),
+                (
+                    carla.Transform(
+                        carla.Location(x=0, y=-2.5, z=-0.0),
+                        carla.Rotation(yaw=90.0),
+                    ),
+                    Attachment.Rigid,
+                ),
+            ]
 
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {}],
             ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)', {}],
             ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)', {}],
-            ['sensor.camera.depth', cc.LogarithmicDepth,
-             'Camera Depth (Logarithmic Gray Scale)', {}],
-            ['sensor.camera.semantic_segmentation', cc.Raw,
-             'Camera Semantic Segmentation (Raw)', {}],
-            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
-             'Camera Semantic Segmentation (CityScapes Palette)', {}],
-            ['sensor.camera.instance_segmentation', cc.CityScapesPalette,
-             'Camera Instance Segmentation (CityScapes Palette)', {}],
-            ['sensor.camera.instance_segmentation', cc.Raw,
-             'Camera Instance Segmentation (Raw)', {}],
-            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)',
-             {'range': '50'}],
+            [
+                'sensor.camera.depth',
+                cc.LogarithmicDepth,
+                'Camera Depth (Logarithmic Gray Scale)',
+                {},
+            ],
+            [
+                'sensor.camera.semantic_segmentation',
+                cc.Raw,
+                'Camera Semantic Segmentation (Raw)',
+                {},
+            ],
+            [
+                'sensor.camera.semantic_segmentation',
+                cc.CityScapesPalette,
+                'Camera Semantic Segmentation (CityScapes Palette)',
+                {},
+            ],
+            [
+                'sensor.camera.instance_segmentation',
+                cc.CityScapesPalette,
+                'Camera Instance Segmentation (CityScapes Palette)',
+                {},
+            ],
+            [
+                'sensor.camera.instance_segmentation',
+                cc.Raw,
+                'Camera Instance Segmentation (Raw)',
+                {},
+            ],
+            [
+                'sensor.lidar.ray_cast',
+                None,
+                'Lidar (Ray-Cast)',
+                {'range': '50'},
+            ],
             ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
-            ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
-             {'lens_circle_multiplier': '3.0',
-              'lens_circle_falloff': '3.0',
-              'chromatic_aberration_intensity': '0.5',
-              'chromatic_aberration_offset': '0'}],
+            [
+                'sensor.camera.rgb',
+                cc.Raw,
+                'Camera RGB Distorted',
+                {
+                    'lens_circle_multiplier': '3.0',
+                    'lens_circle_falloff': '3.0',
+                    'chromatic_aberration_intensity': '0.5',
+                    'chromatic_aberration_offset': '0',
+                },
+            ],
             ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
             ['sensor.camera.normals', cc.Raw, 'Camera Normals', {}],
         ]
@@ -108,14 +182,20 @@ class CameraManager(object):
 
     def toggle_camera(self):
         self.transform_index = (self.transform_index + 1) % len(
-            self._camera_transforms)
+            self._camera_transforms
+        )
         self.set_sensor(self.index, notify=False, force_respawn=True)
 
     def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
-        needs_respawn = True if self.index is None else \
-            (force_respawn or (
-                    self.sensors[index][2] != self.sensors[self.index][2]))
+        needs_respawn = (
+            True
+            if self.index is None
+            else (
+                force_respawn
+                or (self.sensors[index][2] != self.sensors[self.index][2])
+            )
+        )
         if needs_respawn:
             if self.sensor is not None:
                 self.sensor.destroy()
@@ -125,12 +205,15 @@ class CameraManager(object):
                 self._camera_transforms[self.transform_index][0],
                 attach_to=self._parent,
                 attachment_type=self._camera_transforms[self.transform_index][
-                    1])
+                    1
+                ],
+            )
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(
-                lambda image: CameraManager._parse_image(weak_self, image))
+                lambda image: CameraManager._parse_image(weak_self, image)
+            )
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -141,7 +224,8 @@ class CameraManager(object):
     def toggle_recording(self):
         self.recording = not self.recording
         self.hud.notification(
-            'Recording %s' % ('On' if self.recording else 'Off'))
+            'Recording %s' % ('On' if self.recording else 'Off')
+        )
 
     def render(self, display):
         if self.surface is not None:
@@ -168,26 +252,39 @@ class CameraManager(object):
         elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
             # Example of converting the raw_data from a carla.DVSEventArray
             # sensor into a NumPy array and using it as an image
-            dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
-                ('x', np.uint16), ('y', np.uint16), ('t', np.int64),
-                ('pol', np.bool)]))
+            dvs_events = np.frombuffer(
+                image.raw_data,
+                dtype=np.dtype(
+                    [
+                        ('x', np.uint16),
+                        ('y', np.uint16),
+                        ('t', np.int64),
+                        ('pol', np.bool),
+                    ]
+                ),
+            )
             dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
             # Blue is positive, red is negative
-            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:][
-                                                                'pol'] * 2] = 255
+            dvs_img[
+                dvs_events[:]['y'],
+                dvs_events[:]['x'],
+                dvs_events[:]['pol'] * 2,
+            ] = 255
             self.surface = pygame.surfarray.make_surface(
-                dvs_img.swapaxes(0, 1))
+                dvs_img.swapaxes(0, 1)
+            )
         elif self.sensors[self.index][0].startswith(
-                'sensor.camera.optical_flow'):
+            'sensor.camera.optical_flow'
+        ):
             image = image.get_color_coded_flow()
-            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+            array = np.frombuffer(image.raw_data, dtype=np.dtype('uint8'))
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         else:
             image.convert(self.sensors[self.index][1])
-            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+            array = np.frombuffer(image.raw_data, dtype=np.dtype('uint8'))
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
             array = array[:, :, ::-1]
@@ -204,13 +301,15 @@ class CollisionSensor(object):
         self.hud = hud
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.collision')
-        self.sensor = world.spawn_actor(bp, carla.Transform(),
-                                        attach_to=self._parent)
+        self.sensor = world.spawn_actor(
+            bp, carla.Transform(), attach_to=self._parent
+        )
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
-            lambda event: CollisionSensor._on_collision(weak_self, event))
+            lambda event: CollisionSensor._on_collision(weak_self, event)
+        )
 
     def get_collision_history(self):
         history = collections.defaultdict(int)
@@ -226,7 +325,7 @@ class CollisionSensor(object):
         actor_type = get_actor_display_name(event.other_actor)
         self.hud.notification('Collision with %r' % actor_type)
         impulse = event.normal_impulse
-        intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
+        intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
         self.history.append((event.frame, intensity))
         if len(self.history) > 4000:
             self.history.pop(0)
@@ -237,20 +336,22 @@ class LaneInvasionSensor(object):
         self.sensor = None
 
         # If the spawn object is not a vehicle, we cannot use the Lane Invasion Sensor
-        if parent_actor.type_id.startswith("vehicle."):
+        if parent_actor.type_id.startswith('vehicle.'):
             self._parent = parent_actor
             self.hud = hud
             world = self._parent.get_world()
             bp = world.get_blueprint_library().find(
-                'sensor.other.lane_invasion')
-            self.sensor = world.spawn_actor(bp, carla.Transform(),
-                                            attach_to=self._parent)
+                'sensor.other.lane_invasion'
+            )
+            self.sensor = world.spawn_actor(
+                bp, carla.Transform(), attach_to=self._parent
+            )
             # We need to pass the lambda a weak reference to self to avoid circular
             # reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(
-                lambda event: LaneInvasionSensor._on_invasion(weak_self,
-                                                              event))
+                lambda event: LaneInvasionSensor._on_invasion(weak_self, event)
+            )
 
     @staticmethod
     def _on_invasion(weak_self, event):
@@ -270,13 +371,17 @@ class GnssSensor(object):
         self.lon = 0.0
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.gnss')
-        self.sensor = world.spawn_actor(bp, carla.Transform(
-            carla.Location(x=1.0, z=2.8)), attach_to=self._parent)
+        self.sensor = world.spawn_actor(
+            bp,
+            carla.Transform(carla.Location(x=1.0, z=2.8)),
+            attach_to=self._parent,
+        )
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
-            lambda event: GnssSensor._on_gnss_event(weak_self, event))
+            lambda event: GnssSensor._on_gnss_event(weak_self, event)
+        )
 
     @staticmethod
     def _on_gnss_event(weak_self, event):
@@ -297,13 +402,14 @@ class IMUSensor(object):
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.imu')
         self.sensor = world.spawn_actor(
-            bp, carla.Transform(), attach_to=self._parent)
+            bp, carla.Transform(), attach_to=self._parent
+        )
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
-            lambda sensor_data: IMUSensor._IMU_callback(weak_self,
-                                                        sensor_data))
+            lambda sensor_data: IMUSensor._IMU_callback(weak_self, sensor_data)
+        )
 
     @staticmethod
     def _IMU_callback(weak_self, sensor_data):
@@ -314,14 +420,22 @@ class IMUSensor(object):
         self.accelerometer = (
             max(limits[0], min(limits[1], sensor_data.accelerometer.x)),
             max(limits[0], min(limits[1], sensor_data.accelerometer.y)),
-            max(limits[0], min(limits[1], sensor_data.accelerometer.z)))
+            max(limits[0], min(limits[1], sensor_data.accelerometer.z)),
+        )
         self.gyroscope = (
-            max(limits[0],
-                min(limits[1], math.degrees(sensor_data.gyroscope.x))),
-            max(limits[0],
-                min(limits[1], math.degrees(sensor_data.gyroscope.y))),
-            max(limits[0],
-                min(limits[1], math.degrees(sensor_data.gyroscope.z))))
+            max(
+                limits[0],
+                min(limits[1], math.degrees(sensor_data.gyroscope.x)),
+            ),
+            max(
+                limits[0],
+                min(limits[1], math.degrees(sensor_data.gyroscope.y)),
+            ),
+            max(
+                limits[0],
+                min(limits[1], math.degrees(sensor_data.gyroscope.z)),
+            ),
+        )
         self.compass = math.degrees(sensor_data.compass)
 
 
@@ -330,7 +444,7 @@ class RadarSensor(object):
         self.sensor = None
         self._parent = parent_actor
         bound_x = 0.5 + self._parent.bounding_box.extent.x
-        bound_y = 0.5 + self._parent.bounding_box.extent.y
+        0.5 + self._parent.bounding_box.extent.y
         bound_z = 0.5 + self._parent.bounding_box.extent.z
 
         self.velocity_range = 7.5  # m/s
@@ -343,13 +457,17 @@ class RadarSensor(object):
             bp,
             carla.Transform(
                 carla.Location(x=bound_x + 0.05, z=bound_z + 0.05),
-                carla.Rotation(pitch=5)),
-            attach_to=self._parent)
+                carla.Rotation(pitch=5),
+            ),
+            attach_to=self._parent,
+        )
         # We need a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
-            lambda radar_data: RadarSensor._Radar_callback(weak_self,
-                                                           radar_data))
+            lambda radar_data: RadarSensor._Radar_callback(
+                weak_self, radar_data
+            )
+        )
 
     @staticmethod
     def _Radar_callback(weak_self, radar_data):
@@ -372,18 +490,23 @@ class RadarSensor(object):
                 carla.Rotation(
                     pitch=current_rot.pitch + alt,
                     yaw=current_rot.yaw + azi,
-                    roll=current_rot.roll)).transform(fw_vec)
+                    roll=current_rot.roll,
+                ),
+            ).transform(fw_vec)
 
             def clamp(min_v, max_v, value):
                 return max(min_v, min(value, max_v))
 
-            norm_velocity = detect.velocity / self.velocity_range  # range [-1, 1]
+            norm_velocity = (
+                detect.velocity / self.velocity_range
+            )  # range [-1, 1]
             r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
             g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
-            b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
+            b = int(abs(clamp(-1.0, 0.0, -1.0 - norm_velocity)) * 255.0)
             self.debug.draw_point(
                 radar_data.transform.location + fw_vec,
                 size=0.075,
                 life_time=0.06,
                 persistent_lines=False,
-                color=carla.Color(r, g, b))
+                color=carla.Color(r, g, b),
+            )

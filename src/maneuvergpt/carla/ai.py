@@ -7,16 +7,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional
 
 import redis
+from common.config import ManeuverParameters
 from openai import OpenAI
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from common.config import ManeuverParameters
-
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
 
@@ -40,6 +38,7 @@ class PhaseParameters(BaseModel):
 #         "min_speed": 10.0,
 #         "max_tilt": 0.3
 #     }
+
 
 class ManeuverCollection(BaseModel):
     maneuvers: List[ManeuverParameters]
@@ -150,7 +149,7 @@ class RedisQueueManager:
         self.redis_client = redis.Redis(
             host=redis_config['host'],
             port=redis_config['port'],
-            db=redis_config['db']
+            db=redis_config['db'],
         )
         self.queue_name = redis_config.get('queue', 'maneuver_queue')
         self.is_running = True
@@ -159,15 +158,17 @@ class RedisQueueManager:
         """Generate a single maneuver configuration"""
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model='gpt-4o-mini',
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user",
-                     "content": "Generate a new J-Turn maneuver configuration"}
+                    {'role': 'system', 'content': SYSTEM_PROMPT},
+                    {
+                        'role': 'user',
+                        'content': 'Generate a new J-Turn maneuver configuration',
+                    },
                 ],
-                response_format={"type": "json_object"},
+                response_format={'type': 'json_object'},
                 temperature=0.7,
-                max_tokens=1000
+                max_tokens=1000,
             )
 
             raw_json = json.loads(response.choices[0].message.content)
@@ -175,7 +176,7 @@ class RedisQueueManager:
             return validated
 
         except Exception as e:
-            logging.error(f"Error generating maneuver: {str(e)}")
+            logging.error(f'Error generating maneuver: {str(e)}')
             return None
 
     def process_and_enqueue(self, task_id: int) -> bool:
@@ -187,12 +188,14 @@ class RedisQueueManager:
                 maneuver_json = maneuver.model_dump_json()
                 self.redis_client.rpush(self.queue_name, maneuver_json)
                 logging.info(
-                    f"Task {task_id}: Successfully generated and enqueued maneuver")
+                    f'Task {task_id}: Successfully generated and enqueued maneuver'
+                )
                 return True
             return False
         except Exception as e:
             logging.error(
-                f"Task {task_id}: Failed to process or enqueue maneuver: {str(e)}")
+                f'Task {task_id}: Failed to process or enqueue maneuver: {str(e)}'
+            )
             return False
 
     def generate_maneuvers_batch(self, num_sets: int) -> tuple[int, int]:
@@ -204,12 +207,16 @@ class RedisQueueManager:
         failure_count = 0
 
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
-            futures = [executor.submit(self.process_and_enqueue, i)
-                       for i in range(num_sets)]
+            futures = [
+                executor.submit(self.process_and_enqueue, i)
+                for i in range(num_sets)
+            ]
 
-            for future in tqdm(as_completed(futures),
-                               total=num_sets,
-                               desc="Generating maneuvers"):
+            for future in tqdm(
+                as_completed(futures),
+                total=num_sets,
+                desc='Generating maneuvers',
+            ):
                 if future.result():
                     success_count += 1
                 else:
@@ -224,40 +231,33 @@ class RedisQueueManager:
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description="Generate vehicle maneuver parameters using Redis queue")
+        description='Generate vehicle maneuver parameters using Redis queue'
+    )
     parser.add_argument(
-        "-n", "--num-sets",
+        '-n',
+        '--num-sets',
         type=int,
         default=1,
-        help="Number of maneuver sets to generate"
+        help='Number of maneuver sets to generate',
     )
     parser.add_argument(
-        "-w", "--num-workers",
+        '-w',
+        '--num-workers',
         type=int,
         default=3,
-        help="Number of worker threads"
+        help='Number of worker threads',
     )
     parser.add_argument(
-        "--redis-host",
-        default="localhost",
-        help="Redis server host"
+        '--redis-host', default='localhost', help='Redis server host'
     )
     parser.add_argument(
-        "--redis-port",
-        type=int,
-        default=6379,
-        help="Redis server port"
+        '--redis-port', type=int, default=6379, help='Redis server port'
     )
     parser.add_argument(
-        "--redis-db",
-        type=int,
-        default=0,
-        help="Redis database number"
+        '--redis-db', type=int, default=0, help='Redis database number'
     )
     parser.add_argument(
-        "--redis-queue",
-        default="maneuver_queue",
-        help="Redis queue name"
+        '--redis-queue', default='maneuver_queue', help='Redis queue name'
     )
     return parser.parse_args()
 
@@ -265,40 +265,42 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
-        logging.error("OPENAI_API_KEY environment variable not set")
+        logging.error('OPENAI_API_KEY environment variable not set')
         return
 
     redis_config = {
         'host': args.redis_host,
         'port': args.redis_port,
         'db': args.redis_db,
-        'queue': args.redis_queue
+        'queue': args.redis_queue,
     }
 
     queue_manager = RedisQueueManager(
         api_key=api_key,
         redis_config=redis_config,
-        num_workers=args.num_workers
+        num_workers=args.num_workers,
     )
 
     try:
         logging.info(
-            f"Starting maneuver generation with {args.num_sets} sets...")
+            f'Starting maneuver generation with {args.num_sets} sets...'
+        )
         success_count, failure_count = queue_manager.generate_maneuvers_batch(
-            args.num_sets)
+            args.num_sets
+        )
 
-        logging.info(f"Generation complete:")
-        logging.info(f"- Successful: {success_count}")
-        logging.info(f"- Failed: {failure_count}")
-        logging.info(f"- Total processed: {success_count + failure_count}")
+        logging.info('Generation complete:')
+        logging.info(f'- Successful: {success_count}')
+        logging.info(f'- Failed: {failure_count}')
+        logging.info(f'- Total processed: {success_count + failure_count}')
 
     except Exception as e:
-        logging.error(f"Critical error during generation: {str(e)}")
+        logging.error(f'Critical error during generation: {str(e)}')
     finally:
         queue_manager.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
