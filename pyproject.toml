@@ -1,10 +1,11 @@
 [project]
 name = "maneuvergpt"
-version = "0.1.0"
-description = "Agentic Control for Safe Autonomous Stunt Maneuvers"
+version = "1.0.0"
+description = "ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers"
 readme = "README.md"
 authors = [
-    { name = "SHi-ON", email = "shawn@azdam.com" }
+    { name = "SHi-ON", email = "shawn@azdam.ai" },
+    { name = "pranavreddy23", email = "pranavreddy2327@gmail.com" }
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -16,7 +17,3 @@ dependencies = [
     "crewai",
     "tqdm",
 ]
-
-[project.scripts]
-maneuvergpt = "maneuvergpt:main"
-
