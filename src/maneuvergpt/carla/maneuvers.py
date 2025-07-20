@@ -228,13 +228,15 @@ Phase {self.phase} State:
         current_transform = self.vehicle.get_transform()
         current_velocity = self.vehicle.get_velocity()
         current_acceleration = self.vehicle.get_acceleration()
+        current_angular_velocity = self.vehicle.current_angular_velocity()
         self.trajectory.append(
             {
                 'timestamp': current_time,
                 'location': current_transform.location,
-                'rotation': current_transform.rotation,
+                'rotation': current_transform.rotation,  # deg
                 'velocity': current_velocity,
                 'acceleration': current_acceleration,
+                'angular_velocity': current_angular_velocity,  # deg / s
             }
         )
 
@@ -259,6 +261,7 @@ Phase {self.phase} State:
                     'ax': round(point['acceleration'].x, 4),
                     'ay': round(point['acceleration'].y, 4),
                     'az': round(point['acceleration'].z, 4),
+                    'yaw_rate': round(point['angular_velocity'].z, 4),
                 }
             )
 
