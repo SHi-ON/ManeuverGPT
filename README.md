@@ -87,23 +87,13 @@ Ensure **CARLA** is installed and running before executing the scripts.
 To execute a J-turn maneuver in the CARLA simulation environment:
 
 ```sh
-python experiments/j_turn_eval.py --vehicle sedan --iterations 100
+python src/maneuvergpt/carla/drive.py --iterations 100
 ```
 
-Additional parameters:
+For additional parameters, refer to the help documentation:
 
 ```sh
---vehicle [sedan|sports_coupe]   # Selects the vehicle model
---iterations N                   # Number of trials to run
---output results.json            # Saves experiment results to a JSON file
-```
-
-### Parameter Adjustment via Prompting
-
-The agents iteratively refine maneuver parameters based on textual prompts:
-
-```sh
-python src/main.py --prompt "Execute a J-turn avoiding obstacles."
+python src/maneuvergpt/carla/drive.py --help
 ```
 
 ## Citation
