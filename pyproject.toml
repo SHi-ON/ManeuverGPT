@@ -17,3 +17,21 @@ dependencies = [
     "crewai",
     "tqdm",
 ]
+
+[project.optional-dependencies]
+dev = [
+    'ruff',
+]
+
+[tool.ruff]
+target-version = 'py313'
+line-length = 79
+
+[tool.ruff.lint]
+select = ['E', 'F', 'I']
+ignore = []
+
+[tool.ruff.format]
+quote-style = 'single'
+indent-style = 'space'
+line-ending = 'lf'
