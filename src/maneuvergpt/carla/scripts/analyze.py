@@ -1,5 +1,6 @@
 import math
 import pathlib
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -78,13 +79,21 @@ def normalize_time(df):
 def calculate_rotational_velocity(df):
     """
     Calculate rotational velocity ('v_rot') from the 'yaw' changes over time.
+    Deprecated: Use 'yaw_rate' column directly if available.
 
     :param df: DataFrame with 'yaw' and 'time' columns
     :return: DataFrame with an added 'v_rot' column
     """
+    warnings.warn(
+        message='calculate_rotational_velocity is deprecated and'
+        ' will be removed in a future release.',
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+
     df = df.copy()
     df['v_rot'] = df['yaw'].diff() / df['time'].diff()
-    df['v_rot'] = df['v_rot'].fillna(0)  # Handle NaN for the first row
+    df['v_rot'].fillna(0, inplace=True)  # Handle NaN for the first row
     return df
 
 
@@ -195,8 +204,7 @@ def plot_velocity(
                 y=smooth_mean,
                 mode='lines',
                 name=f'Mean {key}',
-                line=dict(color=line_colors[key], width=4),
-                # Increased width from 2 to 4
+                line=dict(color=line_colors[key], width=2),
             )
         )
 
@@ -224,7 +232,7 @@ def plot_velocity(
         yref='paper',
         text=r'<b>Confidence Interval :</b> Δ(v) = 1.96 × (σ / √n)',
         showarrow=False,
-        font=dict(size=42),
+        font=dict(size=20),
         align='center',
     )
 
