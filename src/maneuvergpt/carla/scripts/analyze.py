@@ -1,5 +1,5 @@
+import math
 import pathlib
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,55 @@ from scipy.interpolate import make_interp_spline
 # Set default renderer to save plots as HTML files
 pio.renderers.default = 'browser'
 
-LOGS_DIR = pathlib.Path(__file__).parent / 'logs'
+LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
+
+# Define custom color palette (CloseUp Color Palette by Lukas Keney)
+custom_palette = ['#393449', '#d39493', '#79c3b0', '#5658c9', '#925165']
+
+
+def get_actor_display_name(actor, truncate=250):
+    name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
+    return (name[: truncate - 1] + '\u2026') if len(name) > truncate else name
+
+
+def world_to_body(v, yaw_deg):
+    """Rotate CARLA world-frame velocity into the vehicle body frame."""
+    yaw_rad = math.radians(yaw_deg)
+    v_long = v.x * math.cos(yaw_rad) + v.y * math.sin(yaw_rad)
+    v_lat = -v.x * math.sin(yaw_rad) + v.y * math.cos(yaw_rad)
+    return v_long, v_lat
+
+
+def transform_to_body_frame(df):
+    """
+    Transform world-frame velocities to body-frame velocities using yaw angle.
+
+    :param df: DataFrame with 'vx', 'vy', and 'yaw' columns in world frame
+    :return: DataFrame with transformed 'vx_body' and 'vy_body' columns
+    """
+    df = df.copy()
+
+    # Create a simple velocity vector class for compatibility with world_to_body function
+    class SimpleVector:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+    # Transform each row
+    v_long_list = []
+    v_lat_list = []
+
+    for _, row in df.iterrows():
+        v = SimpleVector(row['vx'], row['vy'])
+        v_long, v_lat = world_to_body(v, row['yaw'])
+        v_long_list.append(v_long)
+        v_lat_list.append(v_lat)
+
+    # Replace world-frame velocities with body-frame velocities
+    df['vx'] = v_long_list  # Longitudinal velocity (forward/backward)
+    df['vy'] = v_lat_list  # Lateral velocity (left/right)
+
+    return df
 
 
 def normalize_time(df):
@@ -21,29 +69,22 @@ def normalize_time(df):
     :return: DataFrame with an added 'time' column starting from zero
     """
     df = df.copy()
-    # Convert to seconds
-    df['time'] = (df['timestamp'] - df['timestamp'].min()) / 1000.0
+    df['time'] = (
+        df['timestamp'] - df['timestamp'].min()
+    ) / 1000.0  # Convert to seconds
     return df
 
 
 def calculate_rotational_velocity(df):
     """
     Calculate rotational velocity ('v_rot') from the 'yaw' changes over time.
-    Deprecated: Use 'yaw_rate' column directly if available.
 
     :param df: DataFrame with 'yaw' and 'time' columns
     :return: DataFrame with an added 'v_rot' column
     """
-    warnings.warn(
-        message='calculate_rotational_velocity is deprecated and'
-        ' will be removed in a future release.',
-        category=DeprecationWarning,
-        stacklevel=2,
-    )
-
     df = df.copy()
     df['v_rot'] = df['yaw'].diff() / df['time'].diff()
-    df['v_rot'].fillna(0, inplace=True)  # Handle NaN for the first row
+    df['v_rot'] = df['v_rot'].fillna(0)  # Handle NaN for the first row
     return df
 
 
@@ -120,14 +161,18 @@ def plot_velocity(
     :param ci_velocities: Dictionary with confidence interval data
     :param output_file: Filename for the output HTML plot
     """
-    # Define line colors (can use named colors or hex codes)
-    line_colors = {'vz': 'blue', 'vy': 'green', 'v_rot': 'orange'}
+    # Define line colors using the custom palette
+    line_colors = {
+        'vx': custom_palette[3],  # Blue (#5658c9)
+        'vy': custom_palette[2],  # Teal (#79c3b0)
+        'v_rot': custom_palette[4],  # Burgundy (#925165)
+    }
 
     # Define fill colors with RGBA format for transparency
     fill_colors = {
-        'vz': 'rgba(0, 0, 255, 0.2)',  # Blue with 20% opacity
-        'vy': 'rgba(0, 128, 0, 0.2)',  # Green with 20% opacity
-        'v_rot': 'rgba(255, 165, 0, 0.2)',  # Orange with 20% opacity
+        'vx': f'rgba({int(custom_palette[3][1:3], 16)}, {int(custom_palette[3][3:5], 16)}, {int(custom_palette[3][5:7], 16)}, 0.3)',
+        'vy': f'rgba({int(custom_palette[2][1:3], 16)}, {int(custom_palette[2][3:5], 16)}, {int(custom_palette[2][5:7], 16)}, 0.3)',
+        'v_rot': f'rgba({int(custom_palette[4][1:3], 16)}, {int(custom_palette[4][3:5], 16)}, {int(custom_palette[4][5:7], 16)}, 0.3)',
     }
 
     # Create a Plotly figure
@@ -143,14 +188,15 @@ def plot_velocity(
             smooth_time
         )
 
-        # Add mean velocity line
+        # Add mean velocity line with increased width for boldness
         fig.add_trace(
             go.Scatter(
                 x=smooth_time,
                 y=smooth_mean,
                 mode='lines',
                 name=f'Mean {key}',
-                line=dict(color=line_colors[key], width=2),
+                line=dict(color=line_colors[key], width=4),
+                # Increased width from 2 to 4
             )
         )
 
@@ -178,21 +224,25 @@ def plot_velocity(
         yref='paper',
         text=r'<b>Confidence Interval :</b> Δ(v) = 1.96 × (σ / √n)',
         showarrow=False,
-        font=dict(size=14),
+        font=dict(size=42),
+        align='center',
     )
 
     # Update layout for better aesthetics
     fig.update_layout(
-        title='Vehicle Velocities During J-Turn Maneuver',
+        title='Vehicle Velocities During J-Turn Maneuver (Body Frame)',
         xaxis_title='Time (s)',
-        yaxis_title='Velocity (m/s, deg/s)',
+        yaxis_title='Velocity (m/s, deg/s)<br><sub>vx: Longitudinal (forward+), vy: Lateral (left+), v_rot: Yaw rate</sub>',
         legend_title='Components',
         template='plotly_white',
+        font=dict(size=42, weight='bold'),
         hovermode='x unified',
+        legend=dict(
+            font=dict(size=36, weight='bold'),
+            bordercolor=custom_palette[0],
+            borderwidth=2,
+        ),
     )
-
-    # Add LaTeX-styled axis titles if needed (Plotly supports limited LaTeX)
-    # For more complex LaTeX, consider using images or annotations
 
     # Save the figure as an HTML file and open in the browser
     fig.write_html(output_file, include_plotlyjs='cdn')
@@ -206,17 +256,42 @@ def main(test_mode=False, num_files=None):
     :param test_mode: Boolean indicating whether to run in test mode (single CSV)
     :param num_files: Integer specifying the number of CSV files to process
     """
+    # Debug: Check what's happening
+    import os
+
+    print(f'Current working directory: {os.getcwd()}')
+    print(f'LOGS_DIR path: {LOGS_DIR}')
+    print(f'LOGS_DIR absolute path: {LOGS_DIR.resolve()}')
+    print(f'LOGS_DIR exists: {LOGS_DIR.exists()}')
+
+    if LOGS_DIR.exists():
+        all_files = list(LOGS_DIR.iterdir())
+        csv_files = [f for f in all_files if f.suffix == '.csv']
+        print(f'Total files in directory: {len(all_files)}')
+        print(f'CSV files found: {len(csv_files)}')
+        if csv_files:
+            print(f'First few CSV files: {csv_files[:3]}')
+    else:
+        print(f'Directory does not exist!')
+        # Let's check the parent directories
+        parent = LOGS_DIR.parent
+        print(f'Parent directory ({parent}) exists: {parent.exists()}')
+        if parent.exists():
+            print(f'Parent contents: {list(parent.iterdir())}')
+
     # Retrieve all CSV file paths
     file_paths = sorted(LOGS_DIR.glob('*.csv'))
+    print(f"glob('*.csv') returned {len(file_paths)} files")
 
     # Handle test mode and limit number of files if specified
     if test_mode:
         file_paths = file_paths[:1]
         print(f'Running in test mode. Processing only: {file_paths[0]}\n')
     elif num_files is not None:
+        original_count = len(file_paths)
         file_paths = file_paths[:num_files]
         print(
-            f'Found {num_files} CSV files. Processing first {len(file_paths)} files.\n'
+            f'Found {original_count} CSV files. Processing first {len(file_paths)} files.\n'
         )
     else:
         print(f'Found {len(file_paths)} CSV files. Processing all files.\n')
@@ -225,7 +300,11 @@ def main(test_mode=False, num_files=None):
         raise ValueError('No CSV files found in the specified directory.')
 
     all_interpolated = []
-    velocity_columns = ['vz', 'vy', 'v_rot']
+    velocity_columns = [
+        'vx',
+        'vy',
+        'v_rot',
+    ]  # Body frame: vx=longitudinal, vy=lateral, v_rot=yaw_rate
 
     # First, normalize all DataFrames and calculate rotational velocity
     normalized_dfs = []
@@ -238,9 +317,10 @@ def main(test_mode=False, num_files=None):
                 continue
             df = normalize_time(df)
 
-            # Deprecated: use 'yaw_rate' column instead of calculating 'v_rot'
-            # df = calculate_rotational_velocity(df)
+            # Transform from world frame to body frame
+            df = transform_to_body_frame(df)
 
+            df = calculate_rotational_velocity(df)
             # Ensure required velocity columns exist
             for col in velocity_columns:
                 if col not in df.columns:
@@ -289,8 +369,8 @@ def main(test_mode=False, num_files=None):
     aggregated_data = pd.DataFrame(
         {
             'time': common_time,
-            'mean_vz': mean_velocities['vz'],
-            'ci_vz': ci_velocities['vz'],
+            'mean_vx': mean_velocities['vx'],
+            'ci_vx': ci_velocities['vx'],
             'mean_vy': mean_velocities['vy'],
             'ci_vy': ci_velocities['vy'],
             'mean_v_rot': mean_velocities['v_rot'],
@@ -313,8 +393,5 @@ def main(test_mode=False, num_files=None):
 
 
 if __name__ == '__main__':
-    # Example usage:
     # To process all CSVs: main(test_mode=False, num_files=None)
-    # To process first 10 CSVs: main(test_mode=False, num_files=10)
-    # To run in test mode (single CSV): main(test_mode=True, num_files=1)
     main(test_mode=False, num_files=100)
