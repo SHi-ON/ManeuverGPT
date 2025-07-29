@@ -25,39 +25,39 @@ def get_actor_display_name(actor, truncate=250):
 def world_to_body(v, yaw_deg):
     """Rotate CARLA world-frame velocity into the vehicle body frame."""
     yaw_rad = math.radians(yaw_deg)
-    v_long = v.x * math.cos(yaw_rad) + v.y * math.sin(yaw_rad)
+    v_lon = v.x * math.cos(yaw_rad) + v.y * math.sin(yaw_rad)
     v_lat = -v.x * math.sin(yaw_rad) + v.y * math.cos(yaw_rad)
-    return v_long, v_lat
+    v_alt = v.z  # No rotation applied if assuming flat terrain
+    return v_lon, v_lat, v_alt
 
 
 def transform_to_body_frame(df):
-    """
-    Transform world-frame velocities to body-frame velocities using yaw angle.
-
-    :param df: DataFrame with 'vx', 'vy', and 'yaw' columns in world frame
-    :return: DataFrame with transformed 'vx_body' and 'vy_body' columns
-    """
+    """Transform world-frame to body-frame velocities using yaw angle."""
     df = df.copy()
 
     # Create a simple velocity vector class for compatibility with world_to_body function
     class SimpleVector:
-        def __init__(self, x, y):
+        def __init__(self, x, y, z):
             self.x = x
             self.y = y
+            self.z = z
 
     # Transform each row
-    v_long_list = []
-    v_lat_list = []
+    v_longitudinal = []
+    v_latitudinal = []
+    v_altitudinal = []
 
     for _, row in df.iterrows():
-        v = SimpleVector(row['vx'], row['vy'])
-        v_long, v_lat = world_to_body(v, row['yaw'])
-        v_long_list.append(v_long)
-        v_lat_list.append(v_lat)
+        v = SimpleVector(row['vx'], row['vy'], row['vz'])
+        v_lon, v_lat, v_alt = world_to_body(v, row['yaw'])
+        v_longitudinal.append(v_lon)
+        v_latitudinal.append(v_lat)
+        v_altitudinal.append(v_alt)
 
     # Replace world-frame velocities with body-frame velocities
-    df['vx'] = v_long_list  # Longitudinal velocity (forward/backward)
-    df['vy'] = v_lat_list  # Lateral velocity (left/right)
+    df['vx'] = v_longitudinal  # Longitudinal velocity (forward/backward)
+    df['vy'] = v_latitudinal  # Lateral velocity (left/right)
+    df['vz'] = v_altitudinal  # Vertical velocity (up/down, if applicable)
 
     return df
 
@@ -90,6 +90,9 @@ def calculate_rotational_velocity(df):
         category=DeprecationWarning,
         stacklevel=2,
     )
+    if 'yaw_rate' in df.columns:
+        df['v_rot'] = df['yaw_rate']
+        return df
 
     df = df.copy()
     df['v_rot'] = df['yaw'].diff() / df['time'].diff()
@@ -329,6 +332,7 @@ def main(test_mode=False, num_files=None):
             df = transform_to_body_frame(df)
 
             df = calculate_rotational_velocity(df)
+
             # Ensure required velocity columns exist
             for col in velocity_columns:
                 if col not in df.columns:
