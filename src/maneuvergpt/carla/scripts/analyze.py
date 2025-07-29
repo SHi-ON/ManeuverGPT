@@ -1,7 +1,9 @@
+import logging
 import math
 import pathlib
 import warnings
 
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -265,64 +267,23 @@ def plot_velocity(
         # Add metadata to PDF
         d = pdf.infodict()
         d['Title'] = 'Vehicle Velocities During J-Turn Maneuver'
-        d['Author'] = 'ManeuverGPT Analysis'
+        d['Author'] = 'ManeuverGPT Paper Authors'
         d['Subject'] = 'CARLA Vehicle Dynamics Analysis'
         d['Keywords'] = 'CARLA, Vehicle Dynamics, J-Turn, Velocity Analysis'
         d['Creator'] = 'matplotlib'
 
     plt.close(fig)
-    print(f'Plot saved to {output_file} as PDF.')
+    logging.info(f'Figure saved to {output_file}')
 
 
-def main(test_mode=False, num_files=None):
-    """
-    Main function to process CSV files and generate plots.
-
-    :param test_mode: Boolean indicating whether to run in test mode (single CSV)
-    :param num_files: Integer specifying the number of CSV files to process
-    """
-    # Debug: Check what's happening
-    import os
-
-    print(f'Current working directory: {os.getcwd()}')
-    print(f'LOGS_DIR path: {LOGS_DIR}')
-    print(f'LOGS_DIR absolute path: {LOGS_DIR.resolve()}')
-    print(f'LOGS_DIR exists: {LOGS_DIR.exists()}')
-
-    if LOGS_DIR.exists():
-        all_files = list(LOGS_DIR.iterdir())
-        csv_files = [f for f in all_files if f.suffix == '.csv']
-        print(f'Total files in directory: {len(all_files)}')
-        print(f'CSV files found: {len(csv_files)}')
-        if csv_files:
-            print(f'First few CSV files: {csv_files[:3]}')
-    else:
-        print(f'Directory does not exist!')
-        # Let's check the parent directories
-        parent = LOGS_DIR.parent
-        print(f'Parent directory ({parent}) exists: {parent.exists()}')
-        if parent.exists():
-            print(f'Parent contents: {list(parent.iterdir())}')
-
-    # Retrieve all CSV file paths
+def main(debug=False):
     file_paths = sorted(LOGS_DIR.glob('*.csv'))
-    print(f"glob('*.csv') returned {len(file_paths)} files")
-
-    # Handle test mode and limit number of files if specified
-    if test_mode:
-        file_paths = file_paths[:1]
-        print(f'Running in test mode. Processing only: {file_paths[0]}\n')
-    elif num_files is not None:
-        original_count = len(file_paths)
-        file_paths = file_paths[:num_files]
-        print(
-            f'Found {original_count} CSV files. Processing first {len(file_paths)} files.\n'
-        )
-    else:
-        print(f'Found {len(file_paths)} CSV files. Processing all files.\n')
-
     if not file_paths:
-        raise ValueError('No CSV files found in the specified directory.')
+        raise FileNotFoundError('No CSV files found.')
+    logging.info(f"{len(file_paths)} CSV files found")
+    if debug:
+        file_paths = file_paths[:1]
+        logging.debug(f'DeBuG MoDe, processing only the first file...')
 
     all_interpolated = []
     velocity_columns = [
@@ -334,12 +295,15 @@ def main(test_mode=False, num_files=None):
 
     # First, normalize all DataFrames and calculate rotational velocity
     normalized_dfs = []
-    for idx, file_path in enumerate(file_paths, start=1):
-        print(f'Reading file {idx}/{len(file_paths)}: {file_path}')
+    for idx, file_path in tqdm(enumerate(file_paths, start=1),
+                               desc='Loading CSV files',
+                               total=len(file_paths)):
         try:
             df = pd.read_csv(file_path)
             if 'timestamp' not in df.columns:
-                print(f"Skipping {file_path}: 'timestamp' column missing.\n")
+                logging.warning(
+                    f"Skipping {file_path}: 'timestamp' column missing!"
+                )
                 continue
             df = normalize_time(df)
 
@@ -357,9 +321,9 @@ def main(test_mode=False, num_files=None):
                     break
             else:
                 normalized_dfs.append(df)
-                print(f'Loaded DataFrame with {len(df)} rows.\n')
+                logging.debug(f'Loaded DataFrame with {len(df)} rows.\n')
         except Exception as e:
-            print(f'Error reading {file_path}: {e}\n')
+            logging.warning(f'Error reading {file_path}: {e}\n')
 
     if not normalized_dfs:
         raise ValueError(
@@ -378,8 +342,9 @@ def main(test_mode=False, num_files=None):
     # Define the common time base
     dt = 0.01  # Time step in seconds
     common_time = np.arange(global_start, global_end, dt)
-    print(
-        f'Common time range: {common_time[0]:.2f}s to {common_time[-1]:.2f}s with dt={dt}s.\n'
+    logging.info(
+        f'Common time range: {common_time[0]:.2f}s to {common_time[-1]:.2f}s'
+        f' with dt={dt}s.'
     )
 
     # Interpolate each DataFrame to the common time base
@@ -411,19 +376,20 @@ def main(test_mode=False, num_files=None):
 
     aggregated_csv_path = 'aggregated_data.csv'
     aggregated_data.to_csv(aggregated_csv_path, index=False)
-    print(f"Aggregated data saved to '{aggregated_csv_path}'.\n")
+    logging.info(f"Aggregated data saved to '{aggregated_csv_path}'")
 
-    # Display sample of aggregated data
-    print('Sample of aggregated data:')
-    print(aggregated_data.head())
-    print(aggregated_data.tail())
-    print('\n')
+    if debug:
+        print('Sample of aggregated data:')
+        print(aggregated_data.head())
+        print('...')
+        print(aggregated_data.tail())
+        print('\n')
 
-    # Plot the velocities with confidence intervals
     plot_velocity(common_time, mean_velocities, ci_velocities,
                   output_file='vehicle_velocities.pdf')
 
 
 if __name__ == '__main__':
-    # To process all CSVs: main(test_mode=False, num_files=None)
-    main(test_mode=False, num_files=100)
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+    main(debug=False)
