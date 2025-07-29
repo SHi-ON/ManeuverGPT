@@ -15,7 +15,7 @@ plt.style.use('default')
 
 LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
 
-# custom color palette (CloseUp Color Palette by Lukas Keney)
+# CloseUp by Lukas Keney
 color_palette = ['#393449', '#d39493', '#79c3b0', '#5658c9', '#925165']
 
 
@@ -80,7 +80,7 @@ def normalize_time(df):
 
 def calculate_rotational_velocity(df):
     """
-    Calculate rotational velocity ('v_rot') from the 'yaw' changes over time.
+    Calculate rotational velocity ('yaw_rate') from the 'yaw' changes over time.
     Deprecated: Use 'yaw_rate' column directly, if available.
     """
     warnings.warn(
@@ -91,8 +91,8 @@ def calculate_rotational_velocity(df):
     )
 
     df = df.copy()
-    df['v_rot'] = df['yaw'].diff() / df['time'].diff()
-    df['v_rot'].fillna(0, inplace=True)  # Handle NaN for the first row
+    df['yaw_rate'] = df['yaw'].diff() / df['time'].diff()
+    df['yaw_rate'].fillna(0, inplace=True)  # Handle NaN for the first row
     return df
 
 
@@ -174,7 +174,16 @@ def plot_velocity(
         'vx': color_palette[3],  # Blue (#5658c9)
         'vy': color_palette[2],  # Teal (#79c3b0)
         # 'vz': color_palette[0],
-        'v_rot': color_palette[4],  # Burgundy (#925165)
+        'yaw_rate': color_palette[4],  # Burgundy (#925165)
+    }
+
+    labels = {
+        'vx': {'mean': r'$\bar{v}_x$', 'ci': r'95% CI $v_x$'},
+        'vy': {'mean': r'$\bar{v}_y$', 'ci': r'95% CI $v_y$'},
+        # 'vz': {'mean': r'$\bar{v_z}$', 'ci
+        'yaw_rate': {'mean': r'$\bar{\omega}$', 'ci': r'95% CI $\omega$'},
+
+
     }
 
     # Convert hex colors to RGB tuples for matplotlib
@@ -188,21 +197,19 @@ def plot_velocity(
     fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
 
     # Add traces for each velocity component
-    for key in mean_velocities.keys():
+    for k in mean_velocities.keys():
         # Smooth the data for better visualization
-        smooth_time, smooth_mean = smooth_data(
-            mean_velocities[key], common_time
-        )
-        interp_spline = make_interp_spline(common_time, ci_velocities[key], k=3)
+        smooth_time, smooth_mean = smooth_data(mean_velocities[k], common_time)
+        interp_spline = make_interp_spline(common_time, ci_velocities[k], k=3)
         smooth_ci = interp_spline(smooth_time)
 
         # Plot mean velocity line
         ax.plot(
             smooth_time,
             smooth_mean,
-            label=f'Mean {key}',
-            color=line_colors[key],
-            linewidth=2,
+            label=labels[k]['mean'],
+            color=line_colors[k],
+            linewidth=1,
         )
 
         # Add confidence interval shading
@@ -210,16 +217,17 @@ def plot_velocity(
             smooth_time,
             smooth_mean - smooth_ci,
             smooth_mean + smooth_ci,
-            color=fill_colors[key],
+            label=labels[k]['ci'],
+            color=fill_colors[k],
             alpha=0.3,
-            label=f'95% CI {key}',
         )
 
     # Add mathematical annotation
     ax.text(
         0.5,
         1.02,
-        r'$\mathbf{Confidence\ Interval:}$ $\Delta(v) = 1.96 \times (\sigma / \sqrt{n})$',
+        r'$\mathbf{95\%\ Confidence\ Interval:}$ $\Delta(v) = 1.96 \times ('
+        r'\sigma / \sqrt{n})$',
         ha='center',
         va='bottom',
         transform=ax.transAxes,
@@ -236,11 +244,11 @@ def plot_velocity(
 
     # Add subtitle for axis explanation
     ax.text(0.5, -0.15,
-           'vx: Longitudinal (forward+), vy: Lateral (left+), v_rot: Yaw rate',
+           'vx: Longitudinal (forward+), vy: Lateral (left+), yaw_rate: Yaw rate',
            ha='center', va='top', transform=ax.transAxes, fontsize=10, style='italic', color=color_palette[0])
 
     # Customize legend
-    legend = ax.legend(title='Components', fontsize=12, title_fontsize=14,
+    legend = ax.legend( fontsize=12, title_fontsize=14,
                       loc='upper right', frameon=True, fancybox=True, shadow=True)
     legend.get_frame().set_facecolor('white')
     legend.get_frame().set_alpha(0.9)
@@ -290,8 +298,8 @@ def main(debug=False):
         'vx',
         'vy',
         # 'vz',
-        'v_rot',
-    ]  # Body frame: vx=longitudinal, vy=lateral, v_rot=yaw_rate
+        'yaw_rate',
+    ]
 
     # First, normalize all DataFrames and calculate rotational velocity
     normalized_dfs = []
@@ -312,7 +320,6 @@ def main(debug=False):
 
             # Deprecated
             # df = calculate_rotational_velocity(df)
-            df['v_rot'] = df['yaw_rate']
 
             # Ensure required velocity columns exist
             for col in velocity_columns:
@@ -369,8 +376,8 @@ def main(debug=False):
             'ci_vy': ci_velocities['vy'],
             # 'mean_vz': mean_velocities['vz'],
             # 'ci_vz': ci_velocities['vz'],
-            'mean_v_rot': mean_velocities['v_rot'],
-            'ci_v_rot': ci_velocities['v_rot'],
+            'mean_yaw_rate': mean_velocities['yaw_rate'],
+            'ci_yaw_rate': ci_velocities['yaw_rate'],
         }
     )
 
