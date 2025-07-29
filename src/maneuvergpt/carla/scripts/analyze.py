@@ -79,10 +79,7 @@ def normalize_time(df):
 def calculate_rotational_velocity(df):
     """
     Calculate rotational velocity ('v_rot') from the 'yaw' changes over time.
-    Deprecated: Use 'yaw_rate' column directly if available.
-
-    :param df: DataFrame with 'yaw' and 'time' columns
-    :return: DataFrame with an added 'v_rot' column
+    Deprecated: Use 'yaw_rate' column directly, if available.
     """
     warnings.warn(
         message='calculate_rotational_velocity is deprecated and'
@@ -90,9 +87,6 @@ def calculate_rotational_velocity(df):
         category=DeprecationWarning,
         stacklevel=2,
     )
-    if 'yaw_rate' in df.columns:
-        df['v_rot'] = df['yaw_rate']
-        return df
 
     df = df.copy()
     df['v_rot'] = df['yaw'].diff() / df['time'].diff()
@@ -334,7 +328,9 @@ def main(test_mode=False, num_files=None):
             # Transform from world frame to body frame
             df = transform_to_body_frame(df)
 
-            df = calculate_rotational_velocity(df)
+            # Deprecated
+            # df = calculate_rotational_velocity(df)
+            df['v_rot'] = df['yaw_rate']
 
             # Ensure required velocity columns exist
             for col in velocity_columns:
