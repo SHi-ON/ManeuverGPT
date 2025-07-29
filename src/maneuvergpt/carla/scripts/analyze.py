@@ -13,9 +13,8 @@ plt.style.use('default')
 
 LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
 
-# TODO: update the color palette
-# Define custom color palette (CloseUp Color Palette by Lukas Keney)
-custom_palette = ['#D3C94B', '#d39493', '#79c3b0', '#5658c9', '#925165']
+# custom color palette (CloseUp Color Palette by Lukas Keney)
+color_palette = ['#393449', '#d39493', '#79c3b0', '#5658c9', '#925165']
 
 
 def get_actor_display_name(actor, truncate=250):
@@ -170,10 +169,10 @@ def plot_velocity(
     """
     # Define line colors using the custom palette
     line_colors = {
-        'vx': custom_palette[3],  # Blue (#5658c9)
-        'vy': custom_palette[2],  # Teal (#79c3b0)
-        'vz': custom_palette[0],  # Yellow (#D3C94B)
-        'v_rot': custom_palette[4],  # Burgundy (#925165)
+        'vx': color_palette[3],  # Blue (#5658c9)
+        'vy': color_palette[2],  # Teal (#79c3b0)
+        # 'vz': color_palette[0],
+        'v_rot': color_palette[4],  # Burgundy (#925165)
     }
 
     # Convert hex colors to RGB tuples for matplotlib
@@ -223,25 +222,34 @@ def plot_velocity(
         va='bottom',
         transform=ax.transAxes,
         fontsize=14,
+        color=color_palette[0],
         bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8)
     )
 
     # Update layout for better aesthetics
-    ax.set_title('Vehicle Velocities During J-Turn Maneuver (Body Frame)',
-                fontsize=18, fontweight='bold', pad=40)
-    ax.set_xlabel('Time (s)', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Velocity (m/s, deg/s)', fontsize=14, fontweight='bold')
+    ax.set_title('Vehicle Velocities During J-Turn Maneuver',
+                fontsize=18, fontweight='bold', pad=40, color=color_palette[0])
+    ax.set_xlabel('Time (s)', fontsize=14, fontweight='bold', color=color_palette[0])
+    ax.set_ylabel('Velocity (m/s, deg/s)', fontsize=14, fontweight='bold', color=color_palette[0])
 
     # Add subtitle for axis explanation
     ax.text(0.5, -0.15,
            'vx: Longitudinal (forward+), vy: Lateral (left+), v_rot: Yaw rate',
-           ha='center', va='top', transform=ax.transAxes, fontsize=10, style='italic')
+           ha='center', va='top', transform=ax.transAxes, fontsize=10, style='italic', color=color_palette[0])
 
     # Customize legend
     legend = ax.legend(title='Components', fontsize=12, title_fontsize=14,
                       loc='upper right', frameon=True, fancybox=True, shadow=True)
     legend.get_frame().set_facecolor('white')
     legend.get_frame().set_alpha(0.9)
+    # Set legend text color to #393449
+    for text in legend.get_texts():
+        text.set_color(color_palette[0])
+    legend.get_title().set_color(color_palette[0])
+
+    # Set tick label colors to #393449
+    ax.tick_params(axis='both', which='major', colors=color_palette[0])
+    ax.tick_params(axis='both', which='minor', colors=color_palette[0])
 
     # Add grid for better readability
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
@@ -320,7 +328,7 @@ def main(test_mode=False, num_files=None):
     velocity_columns = [
         'vx',
         'vy',
-        'vz',
+        # 'vz',
         'v_rot',
     ]  # Body frame: vx=longitudinal, vy=lateral, v_rot=yaw_rate
 
@@ -394,8 +402,8 @@ def main(test_mode=False, num_files=None):
             'ci_vx': ci_velocities['vx'],
             'mean_vy': mean_velocities['vy'],
             'ci_vy': ci_velocities['vy'],
-            'mean_vz': mean_velocities['vz'],
-            'ci_vz': ci_velocities['vz'],
+            # 'mean_vz': mean_velocities['vz'],
+            # 'ci_vz': ci_velocities['vz'],
             'mean_v_rot': mean_velocities['v_rot'],
             'ci_v_rot': ci_velocities['v_rot'],
         }
