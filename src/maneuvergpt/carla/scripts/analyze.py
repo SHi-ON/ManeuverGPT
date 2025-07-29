@@ -14,7 +14,7 @@ pio.renderers.default = 'browser'
 LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
 
 # Define custom color palette (CloseUp Color Palette by Lukas Keney)
-custom_palette = ['#393449', '#d39493', '#79c3b0', '#5658c9', '#925165']
+custom_palette = ['#D3C94B', '#d39493', '#79c3b0', '#5658c9', '#925165']
 
 
 def get_actor_display_name(actor, truncate=250):
@@ -177,6 +177,7 @@ def plot_velocity(
     line_colors = {
         'vx': custom_palette[3],  # Blue (#5658c9)
         'vy': custom_palette[2],  # Teal (#79c3b0)
+        'vz': custom_palette[0],  #
         'v_rot': custom_palette[4],  # Burgundy (#925165)
     }
 
@@ -184,6 +185,7 @@ def plot_velocity(
     fill_colors = {
         'vx': f'rgba({int(custom_palette[3][1:3], 16)}, {int(custom_palette[3][3:5], 16)}, {int(custom_palette[3][5:7], 16)}, 0.3)',
         'vy': f'rgba({int(custom_palette[2][1:3], 16)}, {int(custom_palette[2][3:5], 16)}, {int(custom_palette[2][5:7], 16)}, 0.3)',
+        'vz': f'rgba({int(custom_palette[0][1:3], 16)}, {int(custom_palette[0][3:5], 16)}, {int(custom_palette[0][5:7], 16)}, 0.3)',
         'v_rot': f'rgba({int(custom_palette[4][1:3], 16)}, {int(custom_palette[4][3:5], 16)}, {int(custom_palette[4][5:7], 16)}, 0.3)',
     }
 
@@ -250,7 +252,7 @@ def plot_velocity(
         hovermode='x unified',
         legend=dict(
             font=dict(size=36, weight='bold'),
-            bordercolor=custom_palette[0],
+            # bordercolor=custom_palette[0],
             borderwidth=2,
         ),
     )
@@ -314,6 +316,7 @@ def main(test_mode=False, num_files=None):
     velocity_columns = [
         'vx',
         'vy',
+        'vz',
         'v_rot',
     ]  # Body frame: vx=longitudinal, vy=lateral, v_rot=yaw_rate
 
@@ -385,6 +388,8 @@ def main(test_mode=False, num_files=None):
             'ci_vx': ci_velocities['vx'],
             'mean_vy': mean_velocities['vy'],
             'ci_vy': ci_velocities['vy'],
+            'mean_vz': mean_velocities['vz'],
+            'ci_vz': ci_velocities['vz'],
             'mean_v_rot': mean_velocities['v_rot'],
             'ci_v_rot': ci_velocities['v_rot'],
         }
