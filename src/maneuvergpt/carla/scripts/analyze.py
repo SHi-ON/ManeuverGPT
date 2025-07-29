@@ -4,15 +4,16 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objs as go
-import plotly.io as pio
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from scipy.interpolate import make_interp_spline
 
-# Set default renderer to save plots as HTML files
-pio.renderers.default = 'browser'
+# Set matplotlib backend for better PDF support
+plt.style.use('default')
 
 LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
 
+# TODO: update the color palette
 # Define custom color palette (CloseUp Color Palette by Lukas Keney)
 custom_palette = ['#D3C94B', '#d39493', '#79c3b0', '#5658c9', '#925165']
 
@@ -157,7 +158,7 @@ def plot_velocity(
     common_time,
     mean_velocities,
     ci_velocities,
-    output_file='vehicle_velocities.html',
+    output_file,
 ):
     """
     Plot longitudinal, lateral, and rotational velocities with confidence intervals.
@@ -165,26 +166,25 @@ def plot_velocity(
     :param common_time: Numpy array of common time points
     :param mean_velocities: Dictionary with mean velocity data
     :param ci_velocities: Dictionary with confidence interval data
-    :param output_file: Filename for the output HTML plot
+    :param output_file: Filename for the output PDF plot
     """
     # Define line colors using the custom palette
     line_colors = {
         'vx': custom_palette[3],  # Blue (#5658c9)
         'vy': custom_palette[2],  # Teal (#79c3b0)
-        'vz': custom_palette[0],  #
+        'vz': custom_palette[0],  # Yellow (#D3C94B)
         'v_rot': custom_palette[4],  # Burgundy (#925165)
     }
 
-    # Define fill colors with RGBA format for transparency
-    fill_colors = {
-        'vx': f'rgba({int(custom_palette[3][1:3], 16)}, {int(custom_palette[3][3:5], 16)}, {int(custom_palette[3][5:7], 16)}, 0.3)',
-        'vy': f'rgba({int(custom_palette[2][1:3], 16)}, {int(custom_palette[2][3:5], 16)}, {int(custom_palette[2][5:7], 16)}, 0.3)',
-        'vz': f'rgba({int(custom_palette[0][1:3], 16)}, {int(custom_palette[0][3:5], 16)}, {int(custom_palette[0][5:7], 16)}, 0.3)',
-        'v_rot': f'rgba({int(custom_palette[4][1:3], 16)}, {int(custom_palette[4][3:5], 16)}, {int(custom_palette[4][5:7], 16)}, 0.3)',
-    }
+    # Convert hex colors to RGB tuples for matplotlib
+    def hex_to_rgb(hex_color):
+        hex_color = hex_color.lstrip('#')
+        return tuple(int(hex_color[i:i+2], 16)/255.0 for i in (0, 2, 4))
 
-    # Create a Plotly figure
-    fig = go.Figure()
+    fill_colors = {key: hex_to_rgb(color) for key, color in line_colors.items()}
+
+    # Create a matplotlib figure with high DPI for better PDF quality
+    fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
 
     # Add traces for each velocity component
     for key in mean_velocities.keys():
@@ -192,68 +192,78 @@ def plot_velocity(
         smooth_time, smooth_mean = smooth_data(
             mean_velocities[key], common_time
         )
-        smooth_ci = make_interp_spline(common_time, ci_velocities[key], k=3)(
-            smooth_time
-        )
+        interp_spline = make_interp_spline(common_time, ci_velocities[key], k=3)
+        smooth_ci = interp_spline(smooth_time)
 
-        # Add mean velocity line with increased width for boldness
-        fig.add_trace(
-            go.Scatter(
-                x=smooth_time,
-                y=smooth_mean,
-                mode='lines',
-                name=f'Mean {key}',
-                line=dict(color=line_colors[key], width=2),
-            )
+        # Plot mean velocity line
+        ax.plot(
+            smooth_time,
+            smooth_mean,
+            label=f'Mean {key}',
+            color=line_colors[key],
+            linewidth=2,
         )
 
         # Add confidence interval shading
-        fig.add_trace(
-            go.Scatter(
-                x=np.concatenate([smooth_time, smooth_time[::-1]]),
-                y=np.concatenate(
-                    [smooth_mean + smooth_ci, (smooth_mean - smooth_ci)[::-1]]
-                ),
-                fill='toself',
-                fillcolor=fill_colors[key],
-                line=dict(color='rgba(255,255,255,0)'),
-                hoverinfo='skip',
-                showlegend=True,
-                name=f'95% CI {key}',
-            )
+        ax.fill_between(
+            smooth_time,
+            smooth_mean - smooth_ci,
+            smooth_mean + smooth_ci,
+            color=fill_colors[key],
+            alpha=0.3,
+            label=f'95% CI {key}',
         )
 
-    # Add mathematical annotations
-    fig.add_annotation(
-        x=0.5,
-        y=1.05,
-        xref='paper',
-        yref='paper',
-        text=r'<b>Confidence Interval :</b> Δ(v) = 1.96 × (σ / √n)',
-        showarrow=False,
-        font=dict(size=20),
-        align='center',
+    # Add mathematical annotation
+    ax.text(
+        0.5,
+        1.02,
+        r'$\mathbf{Confidence\ Interval:}$ $\Delta(v) = 1.96 \times (\sigma / \sqrt{n})$',
+        ha='center',
+        va='bottom',
+        transform=ax.transAxes,
+        fontsize=14,
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8)
     )
 
     # Update layout for better aesthetics
-    fig.update_layout(
-        title='Vehicle Velocities During J-Turn Maneuver (Body Frame)',
-        xaxis_title='Time (s)',
-        yaxis_title='Velocity (m/s, deg/s)<br><sub>vx: Longitudinal (forward+), vy: Lateral (left+), v_rot: Yaw rate</sub>',
-        legend_title='Components',
-        template='plotly_white',
-        font=dict(size=42, weight='bold'),
-        hovermode='x unified',
-        legend=dict(
-            font=dict(size=36, weight='bold'),
-            # bordercolor=custom_palette[0],
-            borderwidth=2,
-        ),
-    )
+    ax.set_title('Vehicle Velocities During J-Turn Maneuver (Body Frame)',
+                fontsize=18, fontweight='bold', pad=40)
+    ax.set_xlabel('Time (s)', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Velocity (m/s, deg/s)', fontsize=14, fontweight='bold')
 
-    # Save the figure as an HTML file and open in the browser
-    fig.write_html(output_file, include_plotlyjs='cdn')
-    print(f'Plot saved to {output_file} and opened in your default browser.')
+    # Add subtitle for axis explanation
+    ax.text(0.5, -0.15,
+           'vx: Longitudinal (forward+), vy: Lateral (left+), v_rot: Yaw rate',
+           ha='center', va='top', transform=ax.transAxes, fontsize=10, style='italic')
+
+    # Customize legend
+    legend = ax.legend(title='Components', fontsize=12, title_fontsize=14,
+                      loc='upper right', frameon=True, fancybox=True, shadow=True)
+    legend.get_frame().set_facecolor('white')
+    legend.get_frame().set_alpha(0.9)
+
+    # Add grid for better readability
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_axisbelow(True)
+
+    # Improve overall appearance
+    plt.tight_layout()
+
+    # Save the figure as a PDF file
+    with PdfPages(output_file) as pdf:
+        pdf.savefig(fig, bbox_inches='tight', dpi=150)
+
+        # Add metadata to PDF
+        d = pdf.infodict()
+        d['Title'] = 'Vehicle Velocities During J-Turn Maneuver'
+        d['Author'] = 'ManeuverGPT Analysis'
+        d['Subject'] = 'CARLA Vehicle Dynamics Analysis'
+        d['Keywords'] = 'CARLA, Vehicle Dynamics, J-Turn, Velocity Analysis'
+        d['Creator'] = 'matplotlib'
+
+    plt.close(fig)
+    print(f'Plot saved to {output_file} as PDF.')
 
 
 def main(test_mode=False, num_files=None):
@@ -402,7 +412,8 @@ def main(test_mode=False, num_files=None):
     print('\n')
 
     # Plot the velocities with confidence intervals
-    plot_velocity(common_time, mean_velocities, ci_velocities)
+    plot_velocity(common_time, mean_velocities, ci_velocities,
+                  output_file='vehicle_velocities.pdf')
 
 
 if __name__ == '__main__':
