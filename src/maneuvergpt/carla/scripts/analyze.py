@@ -24,6 +24,16 @@ def get_actor_display_name(actor, truncate=250):
     return (name[: truncate - 1] + '\u2026') if len(name) > truncate else name
 
 
+def negate_lateral_components(df):
+    """
+    Negate the lateral components for a better visualization.
+    """
+    df['yaw'] = -df['yaw']
+    df['vy'] = -df['vy']
+    df['yaw_rate'] = -df['yaw_rate']
+    return df
+
+
 def world_to_body(v, yaw_deg):
     """Rotate CARLA world-frame velocity into the vehicle body frame."""
     yaw_rad = math.radians(yaw_deg)
@@ -34,11 +44,12 @@ def world_to_body(v, yaw_deg):
 
 
 def transform_to_body_frame(df):
-    """Transform world-frame to body-frame velocities using yaw angle."""
+    """Transform world-frame to body-frame velocities using the yaw angle."""
     df = df.copy()
 
-    # Create a simple velocity vector class for compatibility with world_to_body function
-    class SimpleVector:
+    df = negate_lateral_components(df)
+
+    class Velocity:
         def __init__(self, x, y, z):
             self.x = x
             self.y = y
@@ -50,7 +61,7 @@ def transform_to_body_frame(df):
     v_altitudinal = []
 
     for _, row in df.iterrows():
-        v = SimpleVector(row['vx'], row['vy'], row['vz'])
+        v = Velocity(row['vx'], row['vy'], row['vz'])
         v_lon, v_lat, v_alt = world_to_body(v, row['yaw'])
         v_longitudinal.append(v_lon)
         v_latitudinal.append(v_lat)
@@ -340,7 +351,7 @@ def main(debug=False):
                 continue
             df = normalize_time(df)
 
-            # Transform from world frame to body frame
+            # Transform from world frame to body (vehicle) frame
             df = transform_to_body_frame(df)
 
             # Deprecated
