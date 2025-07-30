@@ -266,7 +266,9 @@ def plot_velocity(
     ax.text(
         0.5,
         -0.15,
-        'vx: Longitudinal (forward+), vy: Lateral (left+), yaw_rate: Yaw rate',
+        r"$\mathbf{v_x}$: longitudinal velocity (forward $+$),"
+        r" $\mathbf{v_y}$: lateral velocity (left $+$),"
+        r" $\boldsymbol{\omega}$: yaw rate",
         ha='center',
         va='top',
         transform=ax.transAxes,
