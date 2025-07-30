@@ -3,12 +3,12 @@ import math
 import pathlib
 import warnings
 
-from tqdm import tqdm
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.interpolate import make_interp_spline
+from tqdm import tqdm
 
 # Set matplotlib backend for better PDF support
 plt.style.use('default')
@@ -139,7 +139,7 @@ def calculate_statistics(interpolated_data, velocity_columns):
 
 
 def smooth_data(common_time, mean_vel, ci_vel, smoothing_factor=500):
-    """Apply spline smoothing to the data. """
+    """Apply spline smoothing to the data."""
     smooth_time = np.linspace(
         common_time.min(), common_time.max(), smoothing_factor
     )
@@ -148,6 +148,7 @@ def smooth_data(common_time, mean_vel, ci_vel, smoothing_factor=500):
     smooth_mean = spline_mean(smooth_time)
     smooth_ci = spline_ci(smooth_time)
     return smooth_time, smooth_mean, smooth_ci
+
 
 def plot_velocity(
     common_time,
@@ -176,16 +177,16 @@ def plot_velocity(
         'vy': {'mean': r'$\bar{v}_y$', 'ci': r'95% CI $v_y$'},
         # 'vz': {'mean': r'$\bar{v}_z$', 'ci': r'95% CI $v_z$'},
         'yaw_rate': {'mean': r'$\bar{\omega}$', 'ci': r'95% CI $\omega$'},
-
-
     }
 
     # Convert hex colors to RGB tuples for matplotlib
     def hex_to_rgb(hex_color):
         hex_color = hex_color.lstrip('#')
-        return tuple(int(hex_color[i:i+2], 16)/255.0 for i in (0, 2, 4))
+        return tuple(int(hex_color[i : i + 2], 16) / 255.0 for i in (0, 2, 4))
 
-    fill_colors = {key: hex_to_rgb(color) for key, color in line_colors.items()}
+    fill_colors = {
+        key: hex_to_rgb(color) for key, color in line_colors.items()
+    }
 
     # Create a matplotlib figure with high DPI for better PDF quality
     fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
@@ -229,23 +230,49 @@ def plot_velocity(
         transform=ax.transAxes,
         fontsize=14,
         color=color_palette[0],
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8)
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgray', alpha=0.8),
     )
 
     # Update layout for better aesthetics
-    ax.set_title('Vehicle Velocities During J-Turn Maneuver',
-                fontsize=18, fontweight='bold', pad=40, color=color_palette[0])
-    ax.set_xlabel('Time (s)', fontsize=14, fontweight='bold', color=color_palette[0])
-    ax.set_ylabel('Velocity (m/s, deg/s)', fontsize=14, fontweight='bold', color=color_palette[0])
+    ax.set_title(
+        'Vehicle Velocities During J-Turn Maneuver',
+        fontsize=18,
+        fontweight='bold',
+        pad=40,
+        color=color_palette[0],
+    )
+    ax.set_xlabel(
+        'Time (s)', fontsize=14, fontweight='bold', color=color_palette[0]
+    )
+    ax.set_ylabel(
+        'Velocity (m/s, deg/s)',
+        fontsize=14,
+        fontweight='bold',
+        color=color_palette[0],
+    )
 
     # Add subtitle for axis explanation
-    ax.text(0.5, -0.15,
-           'vx: Longitudinal (forward+), vy: Lateral (left+), yaw_rate: Yaw rate',
-           ha='center', va='top', transform=ax.transAxes, fontsize=10, style='italic', color=color_palette[0])
+    ax.text(
+        0.5,
+        -0.15,
+        'vx: Longitudinal (forward+), vy: Lateral (left+), yaw_rate: Yaw rate',
+        ha='center',
+        va='top',
+        transform=ax.transAxes,
+        fontsize=10,
+        style='italic',
+        color=color_palette[0],
+    )
 
     # Customize legend
-    legend = ax.legend( fontsize=12, title_fontsize=14,
-                      loc='upper right', frameon=True, fancybox=True, shadow=True)
+    legend = ax.legend(
+        fontsize=12,
+        title_fontsize=14,
+        loc='upper right',
+        frameon=True,
+        fancybox=True,
+        shadow=True,
+    )
     legend.get_frame().set_facecolor('white')
     legend.get_frame().set_alpha(0.9)
     # Set legend text color to #393449
@@ -284,10 +311,10 @@ def main(debug=False):
     file_paths = sorted(LOGS_DIR.glob('*.csv'))
     if not file_paths:
         raise FileNotFoundError('No CSV files found.')
-    logging.info(f"{len(file_paths)} CSV files found")
+    logging.info(f'{len(file_paths)} CSV files found')
     if debug:
         file_paths = file_paths[:1]
-        logging.debug(f'DeBuG MoDe, processing only the first file...')
+        logging.debug('DeBuG MoDe, processing only the first file...')
 
     all_interpolated = []
     velocity_columns = [
@@ -299,9 +326,11 @@ def main(debug=False):
 
     # First, normalize all DataFrames and calculate rotational velocity
     normalized_dfs = []
-    for idx, file_path in tqdm(enumerate(file_paths, start=1),
-                               desc='Loading CSV files',
-                               total=len(file_paths)):
+    for idx, file_path in tqdm(
+        enumerate(file_paths, start=1),
+        desc='Loading CSV files',
+        total=len(file_paths),
+    ):
         try:
             df = pd.read_csv(file_path)
             if 'timestamp' not in df.columns:
@@ -388,11 +417,16 @@ def main(debug=False):
         print(aggregated_data.tail())
         print('\n')
 
-    plot_velocity(common_time, mean_velocities, ci_velocities,
-                  output_file='vehicle_velocities.pdf')
+    plot_velocity(
+        common_time,
+        mean_velocities,
+        ci_velocities,
+        output_file='vehicle_velocities.pdf',
+    )
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
+    )
     main(debug=False)
