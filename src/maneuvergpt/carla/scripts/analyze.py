@@ -138,22 +138,16 @@ def calculate_statistics(interpolated_data, velocity_columns):
     return mean_velocities, ci_velocities
 
 
-def smooth_data(mean, common_time, smoothing_factor=500):
-    """
-    Apply spline smoothing to the mean data.
-
-    :param mean: Numpy array of mean velocities
-    :param common_time: Numpy array of common time points
-    :param smoothing_factor: Number of points for spline interpolation
-    :return: Smoothed mean velocities and corresponding time points
-    """
-    spl = make_interp_spline(common_time, mean, k=3)
+def smooth_data(common_time, mean_vel, ci_vel, smoothing_factor=500):
+    """Apply spline smoothing to the data. """
     smooth_time = np.linspace(
         common_time.min(), common_time.max(), smoothing_factor
     )
-    smooth_mean = spl(smooth_time)
-    return smooth_time, smooth_mean
-
+    spline_mean = make_interp_spline(common_time, mean_vel, k=3)
+    spline_ci = make_interp_spline(common_time, ci_vel, k=3)
+    smooth_mean = spline_mean(smooth_time)
+    smooth_ci = spline_ci(smooth_time)
+    return smooth_time, smooth_mean, smooth_ci
 
 def plot_velocity(
     common_time,
@@ -180,7 +174,7 @@ def plot_velocity(
     labels = {
         'vx': {'mean': r'$\bar{v}_x$', 'ci': r'95% CI $v_x$'},
         'vy': {'mean': r'$\bar{v}_y$', 'ci': r'95% CI $v_y$'},
-        # 'vz': {'mean': r'$\bar{v_z}$', 'ci
+        # 'vz': {'mean': r'$\bar{v}_z$', 'ci': r'95% CI $v_z$'},
         'yaw_rate': {'mean': r'$\bar{\omega}$', 'ci': r'95% CI $\omega$'},
 
 
@@ -199,9 +193,11 @@ def plot_velocity(
     # Add traces for each velocity component
     for k in mean_velocities.keys():
         # Smooth the data for better visualization
-        smooth_time, smooth_mean = smooth_data(mean_velocities[k], common_time)
-        interp_spline = make_interp_spline(common_time, ci_velocities[k], k=3)
-        smooth_ci = interp_spline(smooth_time)
+        smooth_time, smooth_mean, smooth_ci = smooth_data(
+            common_time,
+            mean_velocities[k],
+            ci_velocities[k],
+        )
 
         # Plot mean velocity line
         ax.plot(
