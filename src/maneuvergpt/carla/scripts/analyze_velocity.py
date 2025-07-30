@@ -272,9 +272,10 @@ def plot_velocity(
         ha='center',
         va='top',
         transform=ax.transAxes,
-        fontsize=10,
+        fontsize=14,
         style='italic',
         color=color_palette[0],
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgray', alpha=0.8),
     )
 
     # Customize legend
