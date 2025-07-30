@@ -1,6 +1,6 @@
 [project]
 name = "maneuvergpt"
-version = "1.1.0"
+version = "1.2.1"
 description = "ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers"
 readme = "README.md"
 authors = [
