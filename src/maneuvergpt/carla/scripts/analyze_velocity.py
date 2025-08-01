@@ -3,6 +3,11 @@ import math
 import pathlib
 import warnings
 
+import matplotlib as mpl
+
+# Required for IEEE-compliant PDF output
+mpl.rcParams['pdf.fonttype'] = 42  # 42 is TrueType, 3 is Type3
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,7 +16,8 @@ from scipy.interpolate import make_interp_spline
 from tqdm import tqdm
 
 # Set matplotlib backend for better PDF support
-plt.style.use('default')
+# Note: this may generate Type 3 fonts in PDFs, which are not IEEE compliant
+# plt.style.use('default')
 
 LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
 
@@ -266,9 +272,9 @@ def plot_velocity(
     ax.text(
         0.5,
         -0.15,
-        r"$\mathbf{v_x}$: longitudinal velocity (forward $+$),"
-        r" $\mathbf{v_y}$: lateral velocity (left $+$),"
-        r" $\boldsymbol{\omega}$: yaw rate",
+        r'$\mathbf{v_x}$: longitudinal velocity (forward $+$),'
+        r' $\mathbf{v_y}$: lateral velocity (left $+$),'
+        r' $\boldsymbol{\omega}$: yaw rate',
         ha='center',
         va='top',
         transform=ax.transAxes,
