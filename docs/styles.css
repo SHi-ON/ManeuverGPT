@@ -227,6 +227,31 @@ body {
   border-color: var(--accent);
 }
 
+.btn.glow {
+  background: #fff6ea;
+  color: #5b2c16;
+  border-color: #f2c99f;
+  box-shadow: 0 10px 24px rgba(193, 59, 42, 0.18);
+}
+
+.btn.glow:hover {
+  animation: glowPulse 1.4s ease-in-out infinite;
+  box-shadow: 0 16px 36px rgba(193, 59, 42, 0.28);
+  transform: translateY(-2px);
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 16px 36px rgba(193, 59, 42, 0.28);
+  }
+  50% {
+    box-shadow: 0 20px 44px rgba(193, 59, 42, 0.38);
+  }
+  100% {
+    box-shadow: 0 16px 36px rgba(193, 59, 42, 0.28);
+  }
+}
+
 .btn.small {
   padding: 8px 14px;
   font-size: 14px;
