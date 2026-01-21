@@ -332,8 +332,8 @@ main {
 }
 
 .announce-icon {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 14px;
   background: #fff2df;
   display: inline-flex;
@@ -343,8 +343,8 @@ main {
 }
 
 .announce-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
 }
 
@@ -364,7 +364,7 @@ main {
 }
 
 .announce-body {
-  padding: 0 20px 20px 80px;
+  padding: 0 20px 20px 72px;
   color: var(--muted);
   max-height: 0;
   opacity: 0;
