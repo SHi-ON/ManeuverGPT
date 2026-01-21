@@ -30,12 +30,12 @@
 
 📣 **Announcements**:
 
-- **June 2025 — Paper Accepted to IROS 2025! 🎉**  
-  We are excited to announce that our paper has been **accepted for publication at the IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) 2025**, and it has been selected for an **oral presentation**! We appreciate your interest in our work!
-- **July 2025 — Paper updated**  
-  The paper has been updated for the final submission to IROS 2025. See the updated version [here](https://github.com/SHi-ON/ManeuverGPT/blob/main/ManeuverGPT.pdf).
 - **January 2026 — Version 1.3.1 released**  
   Version 1.3.1 released with major changes. See the GitHub Release [here](https://github.com/SHi-ON/ManeuverGPT/releases/latest).
+- **July 2025 — Paper updated**  
+  The paper has been updated for the final submission to IROS 2025. See the updated version [here](https://github.com/SHi-ON/ManeuverGPT/blob/main/ManeuverGPT.pdf).
+- **June 2025 — Paper Accepted to IROS 2025! 🎉**  
+  We are excited to announce that our paper has been **accepted for publication at the IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) 2025**, and it has been selected for an **oral presentation**! We appreciate your interest in our work!
 
 ---
 
