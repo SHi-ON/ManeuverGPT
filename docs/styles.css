@@ -1,0 +1,159 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f2ea;
+  --ink: #1f1a17;
+  --accent: #c23c2a;
+  --accent-2: #2b6cb0;
+  --card: #ffffff;
+  --muted: #6f675e;
+  --border: #e3d9cf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Work Sans", "Helvetica Neue", Arial, sans-serif;
+  background: radial-gradient(circle at top left, #fff7e8, var(--bg));
+  color: var(--ink);
+}
+
+.hero {
+  padding: 64px 24px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.logo {
+  width: 140px;
+  height: 140px;
+}
+
+h1 {
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  font-size: 56px;
+  margin: 0 0 8px;
+}
+
+.tagline {
+  font-size: 20px;
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--card);
+  font-weight: 600;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(31, 26, 23, 0.08);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+}
+
+.list {
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+pre {
+  background: #16120f;
+  color: #fef8f0;
+  padding: 14px;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.media {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin: 32px 0;
+}
+
+.media img {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+figcaption {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+footer a {
+  color: var(--accent-2);
+}
+
+@media (max-width: 720px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .logo {
+    margin: 0 auto;
+  }
+
+  .cta {
+    justify-content: center;
+  }
+}
