@@ -58,6 +58,12 @@ body {
   left: 20%;
 }
 
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
 .hero {
   padding: 32px 24px 56px;
 }
@@ -83,8 +89,11 @@ body {
 }
 
 .brand-mark {
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .nav-links {
@@ -116,6 +125,22 @@ body {
   font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
   font-size: clamp(2.6rem, 5vw, 3.8rem);
   margin: 0 0 16px;
+}
+
+.hero-visual {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
+}
+
+.hero-visual img {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--border);
 }
 
 .eyebrow {
@@ -173,6 +198,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -186,6 +212,13 @@ body {
 .btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 20px rgba(31, 26, 23, 0.12);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 .btn.primary {
@@ -335,6 +368,9 @@ pre {
   color: var(--accent-2);
   text-decoration: none;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .steps {
@@ -372,10 +408,20 @@ footer {
   gap: 12px;
 }
 
+footer div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
 footer a {
   color: var(--accent-2);
   text-decoration: none;
-  margin: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 @media (max-width: 860px) {
