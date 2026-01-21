@@ -16,6 +16,7 @@ import sys
 import carla
 import pygame
 import redis
+from common.config import ManeuverParameters
 from common.util import get_actor_display_name
 from maneuvers import JTurnManeuver
 from pygame.locals import (
@@ -720,10 +721,6 @@ class KeyboardControl(object):
                                         )
                                     else:
                                         _, maneuver_json = result
-                                        from config.config import (
-                                            ManeuverParameters,
-                                        )
-
                                         params = ManeuverParameters.model_validate_json(
                                             maneuver_json.decode('utf8')
                                         )
@@ -867,8 +864,6 @@ class KeyboardControl(object):
             result = redis_client.blpop(self.command_queue, timeout=1)
             if result:
                 _, maneuver_json = result
-                from config.config import ManeuverParameters
-
                 params = ManeuverParameters.model_validate_json(
                     maneuver_json.decode('utf8')
                 )
@@ -1330,8 +1325,8 @@ def main():
     )
     argparser.add_argument(
         '--redis_queue',
-        default='command_queue',
-        help='Redis queue name (default: command_queue)',
+        default='maneuver_queue',
+        help='Redis queue name (default: maneuver_queue)',
     )
 
     args = argparser.parse_args()

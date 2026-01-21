@@ -82,18 +82,60 @@ Ensure **CARLA** is installed and running before executing the scripts.
 
 ## Running Experiments
 
-### J-Turn Execution
+### J-Turn Execution (Autonomous Pipeline)
 
-To execute a J-turn maneuver in the CARLA simulation environment:
+This is the closest path to the full demo behavior: LLM agents generate a
+validated maneuver, push it to Redis, and the CARLA client executes it.
+
+1. **Start CARLA** (server running on `localhost:2000`).
+2. **Start Redis** (default `localhost:6379`).
+3. **Set your LLM key**:
 
 ```sh
-python src/maneuvergpt/carla/drive.py --iterations 100
+export OPENAI_API_KEY="..."
 ```
 
-For additional parameters, refer to the help documentation:
+4. **Run the orchestrator** (generates and enqueues maneuvers):
+
+```sh
+python src/maneuvergpt/carla/orchestrator.py \
+  --mode online \
+  --iterations 5 \
+  --redis_queue maneuver_queue \
+  --user_input "Generate a safe J-turn in an open lot"
+```
+
+5. **Run the CARLA control client** (executes maneuvers from Redis):
+
+```sh
+python src/maneuvergpt/carla/drive.py \
+  --mode online \
+  --redis_queue maneuver_queue \
+  --sync
+```
+
+Notes:
+- The **manual control HUD window** is the "maneuver control interface" in the
+  video. Use `H` / `?` for help, and press `J` to trigger a J-turn immediately
+  if one is queued. Otherwise, the client will auto-start when a maneuver arrives.
+- The **Redis queue name must match** between orchestrator and drive.
+
+### Offline Execution (From a JSON File)
+
+If you already have a validated maneuver file, you can execute it directly:
+
+```sh
+python src/maneuvergpt/carla/maneuvers.py \
+  --mode offline \
+  --params maneuver_outputs/iteration_1/validated_maneuver_1.json
+```
+
+### CLI Help
 
 ```sh
 python src/maneuvergpt/carla/drive.py --help
+python src/maneuvergpt/carla/orchestrator.py --help
+python src/maneuvergpt/carla/maneuvers.py --help
 ```
 
 ## Citation
@@ -113,4 +155,3 @@ If you use ManeuverGPT in your research, please cite:
 ## License
 
 This project is licensed under the **CC BY 4.0**.
-
