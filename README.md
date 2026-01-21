@@ -98,7 +98,7 @@ export OPENAI_API_KEY="..."
 4. **Run the orchestrator** (generates and enqueues maneuvers):
 
 ```sh
-python src/maneuvergpt/carla/orchestrator.py \
+python -m maneuvergpt.carla.orchestrator \
   --mode online \
   --iterations 5 \
   --redis_queue maneuver_queue \
@@ -108,7 +108,7 @@ python src/maneuvergpt/carla/orchestrator.py \
 5. **Run the CARLA control client** (executes maneuvers from Redis):
 
 ```sh
-python src/maneuvergpt/carla/drive.py \
+python -m maneuvergpt.carla.drive \
   --mode online \
   --redis_queue maneuver_queue \
   --sync
@@ -125,7 +125,7 @@ Notes:
 If you already have a validated maneuver file, you can execute it directly:
 
 ```sh
-python src/maneuvergpt/carla/maneuvers.py \
+python -m maneuvergpt.carla.maneuvers \
   --mode offline \
   --params maneuver_outputs/iteration_1/validated_maneuver_1.json
 ```
@@ -133,9 +133,9 @@ python src/maneuvergpt/carla/maneuvers.py \
 ### CLI Help
 
 ```sh
-python src/maneuvergpt/carla/drive.py --help
-python src/maneuvergpt/carla/orchestrator.py --help
-python src/maneuvergpt/carla/maneuvers.py --help
+python -m maneuvergpt.carla.drive --help
+python -m maneuvergpt.carla.orchestrator --help
+python -m maneuvergpt.carla.maneuvers --help
 ```
 
 ## Citation

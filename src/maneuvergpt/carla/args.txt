@@ -1,2 +1,2 @@
-python drive.py --mode online --redis_queue maneuver_queue
-python orchestrator.py --mode online --iterations 10 --redis_queue maneuver_queue --max_workers 5
+python -m maneuvergpt.carla.drive --mode online --redis_queue maneuver_queue
+python -m maneuvergpt.carla.orchestrator --mode online --iterations 10 --redis_queue maneuver_queue --max_workers 5

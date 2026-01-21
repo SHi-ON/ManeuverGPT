@@ -29,7 +29,7 @@ class ValidatorAgent(Agent):
     def validate_maneuver(self, raw_data: str) -> ManeuverParameters:
         logging.info('Validator Agent validating maneuver')
         try:
-            maneuver = ManeuverParameters.parse_raw(raw_data)
+            maneuver = ManeuverParameters.model_validate_json(raw_data)
             logging.debug('Validation successful')
             return maneuver
         except ValidationError as e:
