@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ManeuverGPT</title>
+    <meta
+      name="description"
+      content="ManeuverGPT: Agentic Control for Safe Autonomous Stunt Maneuvers."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <img
+          class="logo"
+          src="assets/ManeuverGPT-logo.png"
+          alt="ManeuverGPT logo"
+        />
+        <div>
+          <h1>ManeuverGPT</h1>
+          <p class="tagline">
+            Agentic Control for Safe Autonomous Stunt Maneuvers
+          </p>
+          <div class="cta">
+            <a
+              class="btn primary"
+              href="https://arxiv.org/abs/2503.09035"
+              target="_blank"
+              rel="noopener"
+              >Paper (arXiv)</a
+            >
+            <a
+              class="btn"
+              href="https://www.youtube.com/playlist?list=PLMcjQ-k9Bg8RPpmOUefSjn8F1C1TC2hTX"
+              target="_blank"
+              rel="noopener"
+              >YouTube Demos</a
+            >
+            <a
+              class="btn"
+              href="https://github.com/SHi-ON/ManeuverGPT"
+              target="_blank"
+              rel="noopener"
+              >Code</a
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="grid">
+        <div class="card">
+          <h2>Overview</h2>
+          <p>
+            ManeuverGPT is an agentic framework that generates and executes
+            high-dynamic stunt maneuvers in autonomous vehicles. It combines a
+            multi-agent LLM controller with safety validation and CARLA-based
+            evaluation.
+          </p>
+          <ul class="list">
+            <li>LLM agents: query enrichment, driver, validator</li>
+            <li>Prompted J-turn generation with safety checks</li>
+            <li>CARLA v0.9.14 evaluation pipeline</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>Autonomous Pipeline</h2>
+          <p>
+            Run the full pipeline by launching the orchestrator and CARLA client
+            against the same Redis queue.
+          </p>
+          <pre><code>export OPENAI_API_KEY="..."
+python -m maneuvergpt.carla.orchestrator \
+  --mode online \
+  --iterations 5 \
+  --redis_queue maneuver_queue \
+  --user_input "Generate a safe J-turn in an open lot"
+
+python -m maneuvergpt.carla.drive \
+  --mode online \
+  --redis_queue maneuver_queue \
+  --sync</code></pre>
+        </div>
+        <div class="card">
+          <h2>Offline Execution</h2>
+          <p>Replay a validated maneuver directly from a JSON file.</p>
+          <pre><code>python -m maneuvergpt.carla.maneuvers \
+  --mode offline \
+  --params maneuver_outputs/iteration_1/validated_maneuver_1.json</code></pre>
+        </div>
+      </section>
+
+      <section class="media">
+        <figure>
+          <img src="assets/fig_agentic.png" alt="Agentic control diagram" />
+          <figcaption>Agentic Control Diagram</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/fig_maneuver.png" alt="Maneuver phases" />
+          <figcaption>Maneuver Phases Overview</figcaption>
+        </figure>
+      </section>
+
+      <section class="card">
+        <h2>Citation</h2>
+        <pre><code>@article{Azdam_ManeuverGPT_Agentic_Control_2025,
+  author = {Azdam, Shawn and Doma, Pranav and Arab, Aliasghar Moj},
+  journal = {arXiv preprint arXiv:2503.09035},
+  title = {{ManeuverGPT Agentic Control for Safe Autonomous Stunt Maneuvers}},
+  url = {https://arxiv.org/abs/2503.09035},
+  year = {2025}
+}</code></pre>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Questions or collaboration: <a href="mailto:shawn@azdam.ai">shawn@azdam.ai</a>
+      </p>
+    </footer>
+  </body>
+</html>

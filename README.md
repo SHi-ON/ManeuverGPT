@@ -12,6 +12,9 @@
   <a href="https://arxiv.org/abs/2503.09035" target="_blank">
     <img src="https://img.shields.io/badge/arXiv-2503.09035-b31b1b.svg" alt="YouTube Badge">
   </a>
+  <a href="https://shi-on.github.io/ManeuverGPT/" target="_blank">
+    <img src="https://img.shields.io/badge/Website-ManeuverGPT-1f4b99.svg" alt="Project Website">
+  </a>
 </p>
 
 <h3 align="center">Agentic Control for Safe Autonomous Stunt Maneuvers</h3>
