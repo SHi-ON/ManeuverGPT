@@ -68,6 +68,16 @@ def parse_arguments():
         help='Number of iterations to generate and enqueue maneuvers (default: 1)',
     )
     parser.add_argument(
+        '--user_input',
+        default='Generate J-Turn configuration for urban environment',
+        help='User request used to seed maneuver generation',
+    )
+    parser.add_argument(
+        '--output_dir',
+        default='maneuver_outputs',
+        help='Base directory for maneuver outputs (default: maneuver_outputs)',
+    )
+    parser.add_argument(
         '--max_workers',
         type=int,
         default=5,
@@ -254,7 +264,7 @@ def generate_and_enqueue(args, iteration_id, output_dir):
         crew = create_crew(tasks)
 
         process_inputs = {
-            'user_input': 'Generate J-Turn configuration for urban environment',
+            'user_input': args.user_input,
             'system_prompt': SYSTEM_PROMPT,
         }
 
@@ -306,7 +316,7 @@ def main():
         args.redis_client = None
 
     # Create a unique directory for all iterations' outputs
-    output_base_dir = 'maneuver_outputs'
+    output_base_dir = args.output_dir
     os.makedirs(output_base_dir, exist_ok=True)
 
     try:

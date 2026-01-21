@@ -499,6 +499,14 @@ def parse_arguments():
     parser.add_argument(
         '--save', action='store_true', help='Enable trajectory saving'
     )
+    parser.add_argument(
+        '--params',
+        default=None,
+        help=(
+            'Path to a validated maneuver JSON file (offline mode). '
+            "Defaults to 'validated_maneuver.json' in the current directory."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -640,18 +648,20 @@ def main():
         while True:
             if args.mode == 'offline':
                 # Load parameters from disk
+                params_path = args.params or 'validated_maneuver.json'
                 try:
-                    with open('validated_maneuver.json', 'r') as f:
+                    with open(params_path, 'r') as f:
                         params = ManeuverParameters.parse_raw(f.read())
                         logging.info(
-                            "Loaded maneuver parameters from 'validated_maneuver.json'"
+                            f"Loaded maneuver parameters from '{params_path}'"
                         )
                         logging.debug(
                             f'Maneuver Parameters:\n{params.model_dump_json(indent=2)}'
                         )
                 except FileNotFoundError:
                     logging.error(
-                        'validated_maneuver.json not found. Ensure orchestrator has generated it.'
+                        f"'{params_path}' not found. If using the orchestrator, "
+                        "pass --params maneuver_outputs/iteration_X/validated_maneuver_X.json."
                     )
                     time.sleep(1)
                     continue
