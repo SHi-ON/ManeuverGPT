@@ -12,9 +12,10 @@ dependencies = [
     "carla",
     "pygame",
     "redis",
-    "pydantic",
+    "pydantic>=2",
     "openai",
     "crewai",
+    "langchain-openai",
     "tqdm",
 ]
 

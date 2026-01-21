@@ -28,7 +28,9 @@ def main():
             _, data = redis_client.blpop(queue_name)
             maneuver_json = data.decode('utf-8')
             try:
-                maneuver = ManeuverParameters.parse_raw(maneuver_json)
+                maneuver = ManeuverParameters.model_validate_json(
+                    maneuver_json
+                )
                 print('Received Maneuver Parameters:')
                 print(maneuver.model_dump_json(indent=2))
             except ValidationError as ve:

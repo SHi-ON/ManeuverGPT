@@ -7,31 +7,14 @@ import pathlib
 import threading
 import time
 from queue import Empty, Queue
-from typing import Dict, Optional
+from typing import Optional
 
 import carla
 import pygame
 import redis
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
-# from config.config import ManeuverParameters, PhaseParameters
-
-
-class PhaseParameters(BaseModel):
-    throttle: float
-    steering_angle: float
-    reverse: bool
-    brake: float
-    duration: float
-
-
-class ManeuverParameters(BaseModel):
-    phase_1: PhaseParameters
-    phase_2: PhaseParameters
-    phase_3: PhaseParameters
-    phase_4: PhaseParameters
-    phase_5: PhaseParameters
-    success_conditions: Dict[str, float]
+from common.config import ManeuverParameters, PhaseParameters
 
 
 def load_maneuver_from_orchestrator(world) -> Optional[ManeuverParameters]:
@@ -44,7 +27,7 @@ def load_maneuver_from_orchestrator(world) -> Optional[ManeuverParameters]:
         # Directly access orchestrator's latest validated parameters
         params = world.orchestrator.current_maneuver_params
         if params:
-            return ManeuverParameters(**params)
+            return ManeuverParameters.model_validate(params)
         return None
     except ValidationError as e:
         logging.error(f'Invalid orchestrator parameters: {e}')
@@ -83,7 +66,7 @@ def load_latest_maneuver_parameters(
     try:
         with open(latest_file, 'r') as f:
             data = json.load(f)
-        maneuver_params = ManeuverParameters(**data)
+        maneuver_params = ManeuverParameters.model_validate(data)
         logging.info('Maneuver parameters successfully loaded and validated.')
         return maneuver_params
     except json.JSONDecodeError as e:
@@ -651,7 +634,9 @@ def main():
                 params_path = args.params or 'validated_maneuver.json'
                 try:
                     with open(params_path, 'r') as f:
-                        params = ManeuverParameters.parse_raw(f.read())
+                        params = ManeuverParameters.model_validate_json(
+                            f.read()
+                        )
                         logging.info(
                             f"Loaded maneuver parameters from '{params_path}'"
                         )
