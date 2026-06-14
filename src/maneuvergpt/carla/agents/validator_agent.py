@@ -4,9 +4,7 @@ from pathlib import Path
 
 from crewai import Agent
 
-sys.path.append(
-    str(Path(__file__).parent.parent)
-)  # Add controller directory to path
+sys.path.append(str(Path(__file__).parent.parent))  # Add controller directory to path
 
 from common.config import ManeuverParameters
 from pydantic import ValidationError
@@ -17,10 +15,7 @@ class ValidatorAgent(Agent):
         super().__init__(
             role='Validator Agent',
             goal='Verify the generated maneuver for format, executability, and quality.',
-            backstory=(
-                'This agent ensures that all generated maneuvers adhere to the defined '
-                'Pydantic models, maintaining high standards of quality and executability.'
-            ),
+            backstory=('This agent ensures that all generated maneuvers adhere to the defined Pydantic models, maintaining high standards of quality and executability.'),
             allow_delegation=True,
             verbose=True,
             tools=[],  # Add any necessary tools if needed

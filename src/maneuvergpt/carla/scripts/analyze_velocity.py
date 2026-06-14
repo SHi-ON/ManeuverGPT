@@ -4,20 +4,12 @@ import pathlib
 import warnings
 
 import matplotlib as mpl
-
-# Required for IEEE-compliant PDF output
-mpl.rcParams['pdf.fonttype'] = 42  # 42 is TrueType, 3 is Type3
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.interpolate import make_interp_spline
 from tqdm import tqdm
-
-# Set matplotlib backend for better PDF support
-# Note: this may generate Type 3 fonts in PDFs, which are not IEEE compliant
-# plt.style.use('default')
 
 LOGS_DIR = pathlib.Path('src/maneuvergpt/carla/logs/j_turn')
 
@@ -89,9 +81,7 @@ def normalize_time(df):
     :return: DataFrame with an added 'time' column starting from zero
     """
     df = df.copy()
-    df['time'] = (
-        df['timestamp'] - df['timestamp'].min()
-    ) / 1000.0  # Convert to seconds
+    df['time'] = (df['timestamp'] - df['timestamp'].min()) / 1000.0  # Convert to seconds
     return df
 
 
@@ -101,8 +91,7 @@ def calculate_rotational_velocity(df):
     Deprecated: Use 'yaw_rate' column directly, if available.
     """
     warnings.warn(
-        message='calculate_rotational_velocity is deprecated and'
-        ' will be removed in a future release.',
+        message='calculate_rotational_velocity is deprecated and will be removed in a future release.',
         category=DeprecationWarning,
         stacklevel=2,
     )
@@ -157,9 +146,7 @@ def calculate_statistics(interpolated_data, velocity_columns):
 
 def smooth_data(common_time, mean_vel, ci_vel, smoothing_factor=500):
     """Apply spline smoothing to the data."""
-    smooth_time = np.linspace(
-        common_time.min(), common_time.max(), smoothing_factor
-    )
+    smooth_time = np.linspace(common_time.min(), common_time.max(), smoothing_factor)
     spline_mean = make_interp_spline(common_time, mean_vel, k=3)
     spline_ci = make_interp_spline(common_time, ci_vel, k=3)
     smooth_mean = spline_mean(smooth_time)
@@ -201,9 +188,7 @@ def plot_velocity(
         hex_color = hex_color.lstrip('#')
         return tuple(int(hex_color[i : i + 2], 16) / 255.0 for i in (0, 2, 4))
 
-    fill_colors = {
-        key: hex_to_rgb(color) for key, color in line_colors.items()
-    }
+    fill_colors = {key: hex_to_rgb(color) for key, color in line_colors.items()}
 
     # Create a matplotlib figure with high DPI for better PDF quality
     fig, ax = plt.subplots(figsize=(12, 8), dpi=150)
@@ -258,9 +243,7 @@ def plot_velocity(
         pad=40,
         color=color_palette[0],
     )
-    ax.set_xlabel(
-        'Time (s)', fontsize=14, fontweight='bold', color=color_palette[0]
-    )
+    ax.set_xlabel('Time (s)', fontsize=14, fontweight='bold', color=color_palette[0])
     ax.set_ylabel(
         'Velocity (m/s, deg/s)',
         fontsize=14,
@@ -354,9 +337,7 @@ def main(debug=False):
         try:
             df = pd.read_csv(file_path)
             if 'timestamp' not in df.columns:
-                logging.warning(
-                    f"Skipping {file_path}: 'timestamp' column missing!"
-                )
+                logging.warning(f"Skipping {file_path}: 'timestamp' column missing!")
                 continue
             df = normalize_time(df)
 
@@ -378,38 +359,27 @@ def main(debug=False):
             logging.warning(f'Error reading {file_path}: {e}\n')
 
     if not normalized_dfs:
-        raise ValueError(
-            'No valid DataFrames to process. Please check the input files.'
-        )
+        raise ValueError('No valid DataFrames to process. Please check the input files.')
 
     # Determine the common time range (overlapping period)
     global_start = max(df['time'].min() for df in normalized_dfs)
     global_end = min(df['time'].max() for df in normalized_dfs)
 
     if global_end <= global_start:
-        raise ValueError(
-            'Global end time must be greater than global start time.'
-        )
+        raise ValueError('Global end time must be greater than global start time.')
 
     # Define the common time base
     dt = 0.01  # Time step in seconds
     common_time = np.arange(global_start, global_end, dt)
-    logging.info(
-        f'Common time range: {common_time[0]:.2f}s to {common_time[-1]:.2f}s'
-        f' with dt={dt}s.'
-    )
+    logging.info(f'Common time range: {common_time[0]:.2f}s to {common_time[-1]:.2f}s with dt={dt}s.')
 
     # Interpolate each DataFrame to the common time base
     for idx, df in enumerate(normalized_dfs, start=1):
-        interpolated = interpolate_to_common_time(
-            df, common_time, velocity_columns
-        )
+        interpolated = interpolate_to_common_time(df, common_time, velocity_columns)
         all_interpolated.append(interpolated)
 
     # Calculate mean and confidence intervals
-    mean_velocities, ci_velocities = calculate_statistics(
-        all_interpolated, velocity_columns
-    )
+    mean_velocities, ci_velocities = calculate_statistics(all_interpolated, velocity_columns)
 
     # Optional: Save aggregated data to CSV for verification
     aggregated_data = pd.DataFrame(
@@ -446,7 +416,6 @@ def main(debug=False):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    mpl.rcParams['pdf.fonttype'] = 42
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     main(debug=False)

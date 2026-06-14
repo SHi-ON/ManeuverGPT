@@ -10,13 +10,9 @@ def main():
     queue_name = 'maneuver_queue'
 
     try:
-        redis_client = redis.Redis(
-            host=redis_host, port=redis_port, db=redis_db
-        )
+        redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
         redis_client.ping()
-        print(
-            f'Connected to Redis at {redis_host}:{redis_port}, DB: {redis_db}'
-        )
+        print(f'Connected to Redis at {redis_host}:{redis_port}, DB: {redis_db}')
     except redis.exceptions.ConnectionError as e:
         print(f'Failed to connect to Redis: {e}')
         return
@@ -28,9 +24,7 @@ def main():
             _, data = redis_client.blpop(queue_name)
             maneuver_json = data.decode('utf-8')
             try:
-                maneuver = ManeuverParameters.model_validate_json(
-                    maneuver_json
-                )
+                maneuver = ManeuverParameters.model_validate_json(maneuver_json)
                 print('Received Maneuver Parameters:')
                 print(maneuver.model_dump_json(indent=2))
             except ValidationError as ve:

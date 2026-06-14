@@ -42,9 +42,7 @@ def load_and_process_data(directory: Path) -> list:
     return angle_errors
 
 
-def create_comparison_plot(
-    single_errors: list, multi_errors: list, output_path: str
-):
+def create_comparison_plot(single_errors: list, multi_errors: list, output_path: str):
     """Create an enhanced Bokeh plot comparing single and multi-agent angle errors"""
     # Create trial numbers
     single_trials = list(range(1, len(single_errors) + 1))
@@ -54,9 +52,7 @@ def create_comparison_plot(
     # Use savgol_filter for smooth curves
     window_length = min(
         15,
-        len(single_errors) - 1
-        if len(single_errors) % 2 == 0
-        else len(single_errors) - 2,
+        len(single_errors) - 1 if len(single_errors) % 2 == 0 else len(single_errors) - 2,
     )
     if window_length < 3:
         window_length = 3

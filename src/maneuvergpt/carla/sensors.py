@@ -25,44 +25,28 @@ class CameraManager(object):
             self._camera_transforms = [
                 (
                     carla.Transform(
-                        carla.Location(
-                            x=-2.0 * bound_x, y=+0.0 * bound_y, z=2.0 * bound_z
-                        ),
+                        carla.Location(x=-2.0 * bound_x, y=+0.0 * bound_y, z=2.0 * bound_z),
                         carla.Rotation(pitch=8.0),
                     ),
                     Attachment.SpringArmGhost,
                 ),
                 (
-                    carla.Transform(
-                        carla.Location(
-                            x=+0.8 * bound_x, y=+0.0 * bound_y, z=1.3 * bound_z
-                        )
-                    ),
+                    carla.Transform(carla.Location(x=+0.8 * bound_x, y=+0.0 * bound_y, z=1.3 * bound_z)),
                     Attachment.Rigid,
                 ),
                 (
-                    carla.Transform(
-                        carla.Location(
-                            x=+1.9 * bound_x, y=+1.0 * bound_y, z=1.2 * bound_z
-                        )
-                    ),
+                    carla.Transform(carla.Location(x=+1.9 * bound_x, y=+1.0 * bound_y, z=1.2 * bound_z)),
                     Attachment.SpringArmGhost,
                 ),
                 (
                     carla.Transform(
-                        carla.Location(
-                            x=-2.8 * bound_x, y=+0.0 * bound_y, z=4.6 * bound_z
-                        ),
+                        carla.Location(x=-2.8 * bound_x, y=+0.0 * bound_y, z=4.6 * bound_z),
                         carla.Rotation(pitch=6.0),
                     ),
                     Attachment.SpringArmGhost,
                 ),
                 (
-                    carla.Transform(
-                        carla.Location(
-                            x=-1.0, y=-1.0 * bound_y, z=0.4 * bound_z
-                        )
-                    ),
+                    carla.Transform(carla.Location(x=-1.0, y=-1.0 * bound_y, z=0.4 * bound_z)),
                     Attachment.Rigid,
                 ),
             ]
@@ -181,21 +165,12 @@ class CameraManager(object):
         self.index = None
 
     def toggle_camera(self):
-        self.transform_index = (self.transform_index + 1) % len(
-            self._camera_transforms
-        )
+        self.transform_index = (self.transform_index + 1) % len(self._camera_transforms)
         self.set_sensor(self.index, notify=False, force_respawn=True)
 
     def set_sensor(self, index, notify=True, force_respawn=False):
         index = index % len(self.sensors)
-        needs_respawn = (
-            True
-            if self.index is None
-            else (
-                force_respawn
-                or (self.sensors[index][2] != self.sensors[self.index][2])
-            )
-        )
+        needs_respawn = True if self.index is None else (force_respawn or (self.sensors[index][2] != self.sensors[self.index][2]))
         if needs_respawn:
             if self.sensor is not None:
                 self.sensor.destroy()
@@ -204,16 +179,12 @@ class CameraManager(object):
                 self.sensors[index][-1],
                 self._camera_transforms[self.transform_index][0],
                 attach_to=self._parent,
-                attachment_type=self._camera_transforms[self.transform_index][
-                    1
-                ],
+                attachment_type=self._camera_transforms[self.transform_index][1],
             )
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)
-            self.sensor.listen(
-                lambda image: CameraManager._parse_image(weak_self, image)
-            )
+            self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -223,9 +194,7 @@ class CameraManager(object):
 
     def toggle_recording(self):
         self.recording = not self.recording
-        self.hud.notification(
-            'Recording %s' % ('On' if self.recording else 'Off')
-        )
+        self.hud.notification('Recording %s' % ('On' if self.recording else 'Off'))
 
     def render(self, display):
         if self.surface is not None:
@@ -270,12 +239,8 @@ class CameraManager(object):
                 dvs_events[:]['x'],
                 dvs_events[:]['pol'] * 2,
             ] = 255
-            self.surface = pygame.surfarray.make_surface(
-                dvs_img.swapaxes(0, 1)
-            )
-        elif self.sensors[self.index][0].startswith(
-            'sensor.camera.optical_flow'
-        ):
+            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+        elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
             array = np.frombuffer(image.raw_data, dtype=np.dtype('uint8'))
             array = np.reshape(array, (image.height, image.width, 4))
@@ -301,15 +266,11 @@ class CollisionSensor(object):
         self.hud = hud
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.collision')
-        self.sensor = world.spawn_actor(
-            bp, carla.Transform(), attach_to=self._parent
-        )
+        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda event: CollisionSensor._on_collision(weak_self, event)
-        )
+        self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
 
     def get_collision_history(self):
         history = collections.defaultdict(int)
@@ -340,18 +301,12 @@ class LaneInvasionSensor(object):
             self._parent = parent_actor
             self.hud = hud
             world = self._parent.get_world()
-            bp = world.get_blueprint_library().find(
-                'sensor.other.lane_invasion'
-            )
-            self.sensor = world.spawn_actor(
-                bp, carla.Transform(), attach_to=self._parent
-            )
+            bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
+            self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
             # We need to pass the lambda a weak reference to self to avoid circular
             # reference.
             weak_self = weakref.ref(self)
-            self.sensor.listen(
-                lambda event: LaneInvasionSensor._on_invasion(weak_self, event)
-            )
+            self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
 
     @staticmethod
     def _on_invasion(weak_self, event):
@@ -379,9 +334,7 @@ class GnssSensor(object):
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda event: GnssSensor._on_gnss_event(weak_self, event)
-        )
+        self.sensor.listen(lambda event: GnssSensor._on_gnss_event(weak_self, event))
 
     @staticmethod
     def _on_gnss_event(weak_self, event):
@@ -401,15 +354,11 @@ class IMUSensor(object):
         self.compass = 0.0
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.imu')
-        self.sensor = world.spawn_actor(
-            bp, carla.Transform(), attach_to=self._parent
-        )
+        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda sensor_data: IMUSensor._IMU_callback(weak_self, sensor_data)
-        )
+        self.sensor.listen(lambda sensor_data: IMUSensor._IMU_callback(weak_self, sensor_data))
 
     @staticmethod
     def _IMU_callback(weak_self, sensor_data):
@@ -463,11 +412,7 @@ class RadarSensor(object):
         )
         # We need a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda radar_data: RadarSensor._Radar_callback(
-                weak_self, radar_data
-            )
-        )
+        self.sensor.listen(lambda radar_data: RadarSensor._Radar_callback(weak_self, radar_data))
 
     @staticmethod
     def _Radar_callback(weak_self, radar_data):
@@ -497,9 +442,7 @@ class RadarSensor(object):
             def clamp(min_v, max_v, value):
                 return max(min_v, min(value, max_v))
 
-            norm_velocity = (
-                detect.velocity / self.velocity_range
-            )  # range [-1, 1]
+            norm_velocity = detect.velocity / self.velocity_range  # range [-1, 1]
             r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
             g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
             b = int(abs(clamp(-1.0, 0.0, -1.0 - norm_velocity)) * 255.0)

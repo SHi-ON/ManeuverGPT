@@ -64,9 +64,7 @@ def add_download_button(plot, filename):
     then retrieves the underlying canvas element, converts it to a PNG data URL,
     and triggers a download using a temporary anchor element.
     """
-    button = Button(
-        label=f'Download {filename}', button_type='success', width=200
-    )
+    button = Button(label=f'Download {filename}', button_type='success', width=200)
     button.js_on_click(
         CustomJS(
             args=dict(plot=plot, filename=filename),
@@ -158,15 +156,11 @@ def calculate_metrics(df):
     df['delta_x'] = df['x'].diff()
     df['delta_y'] = df['y'].diff()
     df['delta_z'] = df['z'].diff()
-    df['delta_distance'] = np.sqrt(
-        df['delta_x'] ** 2 + df['delta_y'] ** 2 + df['delta_z'] ** 2
-    )
+    df['delta_distance'] = np.sqrt(df['delta_x'] ** 2 + df['delta_y'] ** 2 + df['delta_z'] ** 2)
     distance_traveled = df['delta_distance'].sum()
 
     # Path smoothness using curvature
-    df['curvature'] = np.abs(df['yaw_rate']) / np.sqrt(
-        df['vx'] ** 2 + df['vy'] ** 2 + 1e-6
-    )
+    df['curvature'] = np.abs(df['yaw_rate']) / np.sqrt(df['vx'] ** 2 + df['vy'] ** 2 + 1e-6)
     avg_curvature = df['curvature'].mean()
 
     # ---- Improved Jerk Calculation ----
@@ -177,26 +171,16 @@ def calculate_metrics(df):
 
     # Calculate jerk with proper time difference
     time_diff = df['time'].diff()
-    df['jerk'] = np.sqrt(
-        df['ax_diff'] ** 2 + df['ay_diff'] ** 2 + df['az_diff'] ** 2
-    ) / (time_diff + 1e-6)
+    df['jerk'] = np.sqrt(df['ax_diff'] ** 2 + df['ay_diff'] ** 2 + df['az_diff'] ** 2) / (time_diff + 1e-6)
 
     # Apply rolling mean to smooth out spikes
     window_size = 5  # Adjust based on sampling rate
-    df['jerk_smoothed'] = (
-        df['jerk']
-        .rolling(window=window_size, center=True)
-        .mean()
-        .fillna(method='bfill')
-        .fillna(method='ffill')
-    )
+    df['jerk_smoothed'] = df['jerk'].rolling(window=window_size, center=True).mean().fillna(method='bfill').fillna(method='ffill')
 
     # Remove outliers (values beyond 3 standard deviations)
     jerk_mean = df['jerk_smoothed'].mean()
     jerk_std = df['jerk_smoothed'].std()
-    df['jerk_cleaned'] = df['jerk_smoothed'].clip(
-        lower=jerk_mean - 3 * jerk_std, upper=jerk_mean + 3 * jerk_std
-    )
+    df['jerk_cleaned'] = df['jerk_smoothed'].clip(lower=jerk_mean - 3 * jerk_std, upper=jerk_mean + 3 * jerk_std)
 
     avg_jerk = df['jerk_cleaned'].mean()
     max_jerk = df['jerk_cleaned'].max()
@@ -205,9 +189,7 @@ def calculate_metrics(df):
     df['speed'] = np.sqrt(df['vx'] ** 2 + df['vy'] ** 2 + df['vz'] ** 2)
     max_speed = df['speed'].max()
     avg_speed = df['speed'].mean()
-    speed_variation = df['speed'].std() / (
-        avg_speed + 1e-6
-    )  # Coefficient of variation
+    speed_variation = df['speed'].std() / (avg_speed + 1e-6)  # Coefficient of variation
 
     return {
         'angle_error_deg': angle_error,
@@ -256,11 +238,7 @@ def compute_success_ratio(metrics):
     else:
         angle_score = max(
             0.0,
-            1.0
-            - (
-                (angle_error - ANGLE_ERROR_IDEAL)
-                / (ANGLE_ERROR_THRESHOLD - ANGLE_ERROR_IDEAL)
-            ),
+            1.0 - ((angle_error - ANGLE_ERROR_IDEAL) / (ANGLE_ERROR_THRESHOLD - ANGLE_ERROR_IDEAL)),
         )
 
     # Jerk score: 1.0 for ideal or better, 0.0 for threshold or worse
@@ -270,11 +248,7 @@ def compute_success_ratio(metrics):
     else:
         jerk_score = max(
             0.0,
-            1.0
-            - (
-                (avg_jerk - AVG_JERK_IDEAL)
-                / (AVG_JERK_THRESHOLD - AVG_JERK_IDEAL)
-            ),
+            1.0 - ((avg_jerk - AVG_JERK_IDEAL) / (AVG_JERK_THRESHOLD - AVG_JERK_IDEAL)),
         )
 
     # Time score: 1.0 for ideal or better, 0.0 for threshold or worse
@@ -290,9 +264,7 @@ def compute_success_ratio(metrics):
     # Other scores (linear scaling)
     roll_score = max(0.0, 1.0 - (metrics['avg_roll_deg'] / ROLL_THRESHOLD))
     pitch_score = max(0.0, 1.0 - (metrics['avg_pitch_deg'] / PITCH_THRESHOLD))
-    yaw_rate_score = max(
-        0.0, 1.0 - (metrics['yaw_rate_max_dps'] / YAW_RATE_THRESHOLD)
-    )
+    yaw_rate_score = max(0.0, 1.0 - (metrics['yaw_rate_max_dps'] / YAW_RATE_THRESHOLD))
 
     # Updated weights (total = 1.0)
     weights = {
@@ -305,14 +277,7 @@ def compute_success_ratio(metrics):
     }
 
     # Compute weighted average
-    overall_score = (
-        weights['angle'] * angle_score
-        + weights['jerk'] * jerk_score
-        + weights['time'] * time_score
-        + weights['roll'] * roll_score
-        + weights['pitch'] * pitch_score
-        + weights['yaw_rate'] * yaw_rate_score
-    )
+    overall_score = weights['angle'] * angle_score + weights['jerk'] * jerk_score + weights['time'] * time_score + weights['roll'] * roll_score + weights['pitch'] * pitch_score + weights['yaw_rate'] * yaw_rate_score
 
     # Scale the overall score to percentage
     overall_score = max(0.0, min(1.0, overall_score))
@@ -328,9 +293,7 @@ def compute_success_ratio(metrics):
 
     print('\nScore Components:')
     print(f'Angle Score: {angle_score * 100:.1f}% (Error: {angle_error:.1f}°)')
-    print(
-        f'Jerk Score: {jerk_score * 100:.1f}% (Avg Jerk: {avg_jerk:.2f} m/s³)'
-    )
+    print(f'Jerk Score: {jerk_score * 100:.1f}% (Avg Jerk: {avg_jerk:.2f} m/s³)')
     print(f'Time Score: {time_score * 100:.1f}% (Time: {time_taken:.1f}s)')
     print(f'Roll Score: {roll_score * 100:.1f}%')
     print(f'Pitch Score: {pitch_score * 100:.1f}%')
@@ -511,9 +474,7 @@ def plot_success_ratios(all_metrics, download_option=False):
 # -----------------------------
 # Helper to Create Individual Metric Plots
 # -----------------------------
-def create_metric_plot(
-    title_text, y_axis_label, data, threshold, ideal=None, trials_sm=None
-):
+def create_metric_plot(title_text, y_axis_label, data, threshold, ideal=None, trials_sm=None):
     """
     Create a plot with both raw values and smoothed trend.
     """
@@ -712,12 +673,8 @@ def plot_key_metrics(all_metrics, download_option=False):
         threshold=7.0,
         ideal=2.0,
     )
-    p2 = create_new_plot(
-        'Maximum Jerk', 'Jerk (m/s³)', cleaned_jerks, threshold=1.5, ideal=0.8
-    )
-    p3 = create_new_plot(
-        'Time Taken', 'Time (seconds)', times, threshold=5.0, ideal=3.5
-    )
+    p2 = create_new_plot('Maximum Jerk', 'Jerk (m/s³)', cleaned_jerks, threshold=1.5, ideal=0.8)
+    p3 = create_new_plot('Time Taken', 'Time (seconds)', times, threshold=5.0, ideal=3.5)
     p4 = create_new_plot(
         'Distance Traveled',
         'Distance (meters)',
@@ -750,16 +707,12 @@ def plot_key_metrics(all_metrics, download_option=False):
 
         for name, data, threshold, ideal, y_label in plot_data:
             # Create a new plot for download
-            download_plot = create_new_plot(
-                name.replace('_', ' ').title(), y_label, data, threshold, ideal
-            )
+            download_plot = create_new_plot(name.replace('_', ' ').title(), y_label, data, threshold, ideal)
 
             # Create a new file for each download plot
             output_path = OUTPUT_DIR / f'{name}_with_button.html'
             output_file(str(output_path))
-            plot_with_button = add_download_button(
-                download_plot, f'{name}.png'
-            )
+            plot_with_button = add_download_button(download_plot, f'{name}.png')
             save(plot_with_button)
             print(f'Saved {name} plot with download button to {output_path}')
 
@@ -784,9 +737,7 @@ def plot_correlation_matrix(metrics_df, download_option=False):
             y.append(col2)
             values.append(corr.loc[col2, col1])
 
-    mapper = LinearColorMapper(
-        palette=Viridis256, low=min(values), high=max(values)
-    )
+    mapper = LinearColorMapper(palette=Viridis256, low=min(values), high=max(values))
     source_df = pd.DataFrame({'x': x, 'y': y, 'value': values})
 
     p = figure(
@@ -844,9 +795,7 @@ def main(test_mode=False, num_files=None, download_plots=False):
         print(f'Running in test mode. Processing only: {file_paths[0].name}\n')
     elif num_files is not None:
         file_paths = file_paths[:num_files]
-        print(
-            f'Processing the first {len(file_paths)} CSV files out of specified {num_files}.\n'
-        )
+        print(f'Processing the first {len(file_paths)} CSV files out of specified {num_files}.\n')
     else:
         print(f'Found {len(file_paths)} CSV files. Processing all files.\n')
 
@@ -874,9 +823,7 @@ def main(test_mode=False, num_files=None, download_plots=False):
                 'yaw',
             ]
             if not all(col in df.columns for col in required_columns):
-                print(
-                    f'  Skipping {file_path.name}: Missing required columns.\n'
-                )
+                print(f'  Skipping {file_path.name}: Missing required columns.\n')
                 continue
             df = normalize_time(df)
             metrics = calculate_metrics(df)
@@ -884,16 +831,12 @@ def main(test_mode=False, num_files=None, download_plots=False):
             metrics['overall_success'] = overall
             metrics.update(comps)
             all_metrics.append(metrics)
-            print(
-                f"  File '{file_path.name}' processed. Overall Success Ratio: {overall * 100:.2f}%\n"
-            )
+            print(f"  File '{file_path.name}' processed. Overall Success Ratio: {overall * 100:.2f}%\n")
         except Exception as e:
             print(f"  Error processing '{file_path.name}': {e}\n")
 
     if not all_metrics:
-        raise ValueError(
-            'No valid metrics to process. Please check the input files.'
-        )
+        raise ValueError('No valid metrics to process. Please check the input files.')
 
     metrics_df = pd.DataFrame(all_metrics)
     aggregated_csv_path = LOGS_DIR / 'aggregated_success_metrics.csv'

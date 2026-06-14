@@ -101,19 +101,11 @@ Generate parameters strictly following this JSON structure. Each phase should be
 
 
 class PhaseParameters(BaseModel):
-    throttle: float = Field(
-        ..., ge=0.0, le=1.0, description='Throttle value between 0.0 and 1.0'
-    )
-    steering_angle: float = Field(
-        ..., ge=-1.0, le=1.0, description='Steering angle between -1.0 and 1.0'
-    )
+    throttle: float = Field(..., ge=0.0, le=1.0, description='Throttle value between 0.0 and 1.0')
+    steering_angle: float = Field(..., ge=-1.0, le=1.0, description='Steering angle between -1.0 and 1.0')
     reverse: bool = False
-    brake: float = Field(
-        ..., ge=0.0, le=1.0, description='Brake value between 0.0 and 1.0'
-    )
-    duration: float = Field(
-        ..., ge=0.0, le=5.0, description='Duration in seconds'
-    )
+    brake: float = Field(..., ge=0.0, le=1.0, description='Brake value between 0.0 and 1.0')
+    duration: float = Field(..., ge=0.0, le=5.0, description='Duration in seconds')
 
 
 class ManeuverParameters(BaseModel):

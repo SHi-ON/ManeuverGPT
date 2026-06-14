@@ -248,18 +248,12 @@ def main():
         if key == Keyboard.UP:
             cruising_speed = min(cruising_speed + ACCELERATION_STEP, MAX_SPEED)
         elif key == Keyboard.DOWN:
-            cruising_speed = max(
-                cruising_speed - ACCELERATION_STEP, -MAX_SPEED
-            )
+            cruising_speed = max(cruising_speed - ACCELERATION_STEP, -MAX_SPEED)
         # Steering control with LEFT and RIGHT arrow keys
         elif key == Keyboard.LEFT:
-            steering_angle = max(
-                steering_angle - TURN_ANGLE_STEP, -MAX_TURN_ANGLE
-            )
+            steering_angle = max(steering_angle - TURN_ANGLE_STEP, -MAX_TURN_ANGLE)
         elif key == Keyboard.RIGHT:
-            steering_angle = min(
-                steering_angle + TURN_ANGLE_STEP, MAX_TURN_ANGLE
-            )
+            steering_angle = min(steering_angle + TURN_ANGLE_STEP, MAX_TURN_ANGLE)
         else:
             # Gradually reduce the steering angle back to center
             if steering_angle < 0:
@@ -289,20 +283,14 @@ def main():
             llmq.update_state(cruising_speed, steering_angle, roll_velocity)
             # Check for new action instructions
 
-            if current_action_instructions and action_index < len(
-                current_action_instructions.actions
-            ):
-                steering_step = current_action_instructions.actions[
-                    action_index
-                ]
+            if current_action_instructions and action_index < len(current_action_instructions.actions):
+                steering_step = current_action_instructions.actions[action_index]
                 action_index += 1
             else:
                 try:
                     current_action_instructions = llm_queue.get_nowait()
                     action_index = 0
-                    steering_step = current_action_instructions.actions[
-                        action_index
-                    ]
+                    steering_step = current_action_instructions.actions[action_index]
                 except queue.Empty:
                     logging.warning('No new action instructions')
                     continue
@@ -314,11 +302,7 @@ def main():
         driver.setCruisingSpeed(cruising_speed)
         driver.setSteeringAngle(steering_angle)
 
-        print(
-            f'Cruising Speed: {cruising_speed, driver.getCurrentSpeed()} km/h,'
-            f' Steering Angle: {steering_angle} radians,'
-            f' ang vel: {gyro_angular_velocity[0]},'
-        )
+        print(f'Cruising Speed: {cruising_speed, driver.getCurrentSpeed()} km/h, Steering Angle: {steering_angle} radians, ang vel: {gyro_angular_velocity[0]},')
 
         # supervisor.step(TIME_STEP)
 

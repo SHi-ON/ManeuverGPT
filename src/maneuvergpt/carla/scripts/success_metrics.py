@@ -22,9 +22,7 @@ def normalize_time(df):
         pd.DataFrame: DataFrame with an added 'time' column starting from zero.
     """
     df = df.copy()
-    df['time'] = (
-        df['timestamp'] - df['timestamp'].min()
-    ) / 1000.0  # Convert to seconds
+    df['time'] = (df['timestamp'] - df['timestamp'].min()) / 1000.0  # Convert to seconds
     return df
 
 
@@ -65,19 +63,14 @@ def calculate_metrics(df):
     df['delta_x'] = df['x'].diff()
     df['delta_y'] = df['y'].diff()
     df['delta_z'] = df['z'].diff()
-    df['delta_distance'] = np.sqrt(
-        df['delta_x'] ** 2 + df['delta_y'] ** 2 + df['delta_z'] ** 2
-    )
+    df['delta_distance'] = np.sqrt(df['delta_x'] ** 2 + df['delta_y'] ** 2 + df['delta_z'] ** 2)
     distance_traveled = df['delta_distance'].sum()
 
     # Jerk Calculation
     df['ax_diff'] = df['ax'].diff()
     df['ay_diff'] = df['ay'].diff()
     df['az_diff'] = df['az'].diff()
-    df['jerk'] = (
-        np.sqrt(df['ax_diff'] ** 2 + df['ay_diff'] ** 2 + df['az_diff'] ** 2)
-        / df['time'].diff()
-    )
+    df['jerk'] = np.sqrt(df['ax_diff'] ** 2 + df['ay_diff'] ** 2 + df['az_diff'] ** 2) / df['time'].diff()
     max_jerk = df['jerk'].abs().max()
 
     # Safety Margin
@@ -129,27 +122,13 @@ def compute_success_ratio(metrics, weights=None):
     # Normalize each metric based on predefined thresholds
     # These thresholds should be adjusted based on domain knowledge
     normalized_metrics = {
-        'angle_difference': max(
-            0, 1 - metrics['angle_difference'] / 10
-        ),  # Assuming 10° is max acceptable difference
-        'time_taken': max(
-            0, 1 - abs(metrics['time_taken'] - 10) / 5
-        ),  # Assuming 10 seconds target
-        'distance_traveled': max(
-            0, min(metrics['distance_traveled'] / 50, 1)
-        ),  # Assuming 50 meters as target
-        'max_jerk': max(
-            0, 1 - metrics['max_jerk'] / 5
-        ),  # Assuming 5 m/s³ as max jerk
-        'yaw_rate': max(
-            0, 1 - metrics['yaw_rate'] / 20
-        ),  # Assuming 20 deg/s as max yaw rate
-        'max_roll': max(
-            0, 1 - metrics['max_roll'] / 15
-        ),  # Assuming 15 degrees max roll
-        'max_pitch': max(
-            0, 1 - metrics['max_pitch'] / 15
-        ),  # Assuming 15 degrees max pitch
+        'angle_difference': max(0, 1 - metrics['angle_difference'] / 10),  # Assuming 10° is max acceptable difference
+        'time_taken': max(0, 1 - abs(metrics['time_taken'] - 10) / 5),  # Assuming 10 seconds target
+        'distance_traveled': max(0, min(metrics['distance_traveled'] / 50, 1)),  # Assuming 50 meters as target
+        'max_jerk': max(0, 1 - metrics['max_jerk'] / 5),  # Assuming 5 m/s³ as max jerk
+        'yaw_rate': max(0, 1 - metrics['yaw_rate'] / 20),  # Assuming 20 deg/s as max yaw rate
+        'max_roll': max(0, 1 - metrics['max_roll'] / 15),  # Assuming 15 degrees max roll
+        'max_pitch': max(0, 1 - metrics['max_pitch'] / 15),  # Assuming 15 degrees max pitch
     }
 
     # Compute weighted sum
@@ -166,15 +145,11 @@ def compute_success_ratio(metrics, weights=None):
     return success_ratio, score_components
 
 
-def plot_success_ratios(
-    all_metrics, output_file='maneuver_success_ratios.png'
-):
+def plot_success_ratios(all_metrics, output_file='maneuver_success_ratios.png'):
     """
     Plot the success ratios across trials as a line graph with a plain text formula annotation.
     """
-    success_ratios = [
-        metrics['success_ratio'] * 100 for metrics in all_metrics
-    ]
+    success_ratios = [metrics['success_ratio'] * 100 for metrics in all_metrics]
     trials = list(range(1, len(success_ratios) + 1))
 
     # Use constrained_layout for clear spacing
@@ -187,12 +162,8 @@ def plot_success_ratios(
         color='blue',
         label='Success Ratio (%)',
     )
-    plt.axhline(
-        y=100, color='green', linestyle='--', label='Perfect Success (100%)'
-    )
-    plt.axhline(
-        y=60, color='red', linestyle='--', label='Good Success Threshold (70%)'
-    )
+    plt.axhline(y=100, color='green', linestyle='--', label='Perfect Success (100%)')
+    plt.axhline(y=60, color='red', linestyle='--', label='Good Success Threshold (70%)')
     plt.xlabel('Trial Number')
     plt.ylabel('Success Ratio (%)')
     plt.title('Maneuver Success Ratios Across Trials')
@@ -230,9 +201,7 @@ def plot_key_metrics(all_metrics, output_file='key_metrics_overview.png'):
     trials = list(range(1, len(all_metrics) + 1))
     angle_diff = [metrics['angle_difference'] for metrics in all_metrics]
     time_taken = [metrics['time_taken'] for metrics in all_metrics]
-    distance_traveled = [
-        metrics['distance_traveled'] for metrics in all_metrics
-    ]
+    distance_traveled = [metrics['distance_traveled'] for metrics in all_metrics]
     max_jerk = [metrics['max_jerk'] for metrics in all_metrics]
 
     # Calculate means to be shown in titles (optional)
@@ -309,9 +278,7 @@ def plot_key_metrics(all_metrics, output_file='key_metrics_overview.png'):
     axs[1, 0].set_ylabel('Distance Traveled (m)')
     axs[1, 0].grid(True)
     axs[1, 0].legend(loc='upper left')
-    distance_formula = (
-        'Distance = Σ (Euclidean distance between consecutive positions)'
-    )
+    distance_formula = 'Distance = Σ (Euclidean distance between consecutive positions)'
     axs[1, 0].text(
         0.98,
         1.02,
@@ -335,9 +302,7 @@ def plot_key_metrics(all_metrics, output_file='key_metrics_overview.png'):
     )
     axs[1, 1].set_xlabel('Trial Number')
     axs[1, 1].set_ylabel('Max Jerk (m/s³)')
-    axs[1, 1].set_title(
-        f'Max Jerk Across Trials\n(mean ≈ {mean_jerk:.2f} m/s³)'
-    )
+    axs[1, 1].set_title(f'Max Jerk Across Trials\n(mean ≈ {mean_jerk:.2f} m/s³)')
     axs[1, 1].grid(True)
     axs[1, 1].legend(loc='upper left')
     jerk_formula = 'Max Jerk = max( sqrt((Δax)² + (Δay)² + (Δaz)²) / Δt )'
@@ -385,9 +350,7 @@ def main(test_mode=False, num_files=None):
         print(f'Running in test mode. Processing only: {file_paths[0]}\n')
     elif num_files is not None:
         file_paths = file_paths[:num_files]
-        print(
-            f'Processing the first {len(file_paths)} out of {num_files} specified CSV files.\n'
-        )
+        print(f'Processing the first {len(file_paths)} out of {num_files} specified CSV files.\n')
     else:
         print(f'Found {len(file_paths)} CSV files. Processing all files.\n')
 
@@ -420,25 +383,19 @@ def main(test_mode=False, num_files=None):
                 'yaw',
             ]
             if not all(col in df.columns for col in required_columns):
-                print(
-                    f'Skipping {file_path.name}: Missing required columns.\n'
-                )
+                print(f'Skipping {file_path.name}: Missing required columns.\n')
                 continue
             df = normalize_time(df)
             metrics = calculate_metrics(df)
             success_ratio, score_components = compute_success_ratio(metrics)
             metrics['success_ratio'] = success_ratio
             all_metrics.append(metrics)
-            print(
-                f"File '{file_path.name}' processed. Success Ratio: {success_ratio * 100:.2f}%\n"
-            )
+            print(f"File '{file_path.name}' processed. Success Ratio: {success_ratio * 100:.2f}%\n")
         except Exception as e:
             print(f"Error processing '{file_path.name}': {e}\n")
 
     if not all_metrics:
-        raise ValueError(
-            'No valid metrics to process. Please check the input files.'
-        )
+        raise ValueError('No valid metrics to process. Please check the input files.')
 
     # Save aggregated metrics to CSV
     metrics_df = pd.DataFrame(all_metrics)

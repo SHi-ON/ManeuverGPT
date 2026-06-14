@@ -13,9 +13,7 @@ from pydantic import BaseModel
 from tqdm import tqdm
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 # Pydantic models for structured output
@@ -187,15 +185,11 @@ class RedisQueueManager:
                 # Convert to JSON and push to Redis queue
                 maneuver_json = maneuver.model_dump_json()
                 self.redis_client.rpush(self.queue_name, maneuver_json)
-                logging.info(
-                    f'Task {task_id}: Successfully generated and enqueued maneuver'
-                )
+                logging.info(f'Task {task_id}: Successfully generated and enqueued maneuver')
                 return True
             return False
         except Exception as e:
-            logging.error(
-                f'Task {task_id}: Failed to process or enqueue maneuver: {str(e)}'
-            )
+            logging.error(f'Task {task_id}: Failed to process or enqueue maneuver: {str(e)}')
             return False
 
     def generate_maneuvers_batch(self, num_sets: int) -> tuple[int, int]:
@@ -207,10 +201,7 @@ class RedisQueueManager:
         failure_count = 0
 
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
-            futures = [
-                executor.submit(self.process_and_enqueue, i)
-                for i in range(num_sets)
-            ]
+            futures = [executor.submit(self.process_and_enqueue, i) for i in range(num_sets)]
 
             for future in tqdm(
                 as_completed(futures),
@@ -230,9 +221,7 @@ class RedisQueueManager:
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description='Generate vehicle maneuver parameters using Redis queue'
-    )
+    parser = argparse.ArgumentParser(description='Generate vehicle maneuver parameters using Redis queue')
     parser.add_argument(
         '-n',
         '--num-sets',
@@ -247,18 +236,10 @@ def parse_arguments():
         default=3,
         help='Number of worker threads',
     )
-    parser.add_argument(
-        '--redis-host', default='localhost', help='Redis server host'
-    )
-    parser.add_argument(
-        '--redis-port', type=int, default=6379, help='Redis server port'
-    )
-    parser.add_argument(
-        '--redis-db', type=int, default=0, help='Redis database number'
-    )
-    parser.add_argument(
-        '--redis-queue', default='maneuver_queue', help='Redis queue name'
-    )
+    parser.add_argument('--redis-host', default='localhost', help='Redis server host')
+    parser.add_argument('--redis-port', type=int, default=6379, help='Redis server port')
+    parser.add_argument('--redis-db', type=int, default=0, help='Redis database number')
+    parser.add_argument('--redis-queue', default='maneuver_queue', help='Redis queue name')
     return parser.parse_args()
 
 
@@ -284,12 +265,8 @@ def main():
     )
 
     try:
-        logging.info(
-            f'Starting maneuver generation with {args.num_sets} sets...'
-        )
-        success_count, failure_count = queue_manager.generate_maneuvers_batch(
-            args.num_sets
-        )
+        logging.info(f'Starting maneuver generation with {args.num_sets} sets...')
+        success_count, failure_count = queue_manager.generate_maneuvers_batch(args.num_sets)
 
         logging.info('Generation complete:')
         logging.info(f'- Successful: {success_count}')

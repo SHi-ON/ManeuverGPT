@@ -18,9 +18,7 @@ logging.basicConfig(
 
 # Set environment variables
 os.environ['OPENAI_MODEL_NAME'] = 'gpt-4o-mini'
-os.environ['OPENAI_API_KEY'] = os.getenv(
-    'OPENAI_API_KEY', 'Your_OPENAI_API_Key'
-)
+os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY', 'Your_OPENAI_API_Key')
 
 
 def parse_arguments():
@@ -30,9 +28,7 @@ def parse_arguments():
     Returns:
         argparse.Namespace: Parsed arguments.
     """
-    parser = argparse.ArgumentParser(
-        description='Maneuver Orchestrator for CARLA'
-    )
+    parser = argparse.ArgumentParser(description='Maneuver Orchestrator for CARLA')
     parser.add_argument(
         '--mode',
         choices=['offline', 'online'],
@@ -122,10 +118,7 @@ def create_agents() -> list:
     query_enricher_agent = Agent(
         role='Query Enrichment Specialist',
         goal='Extract and clarify all required parameters for maneuver generation',
-        backstory=(
-            'Expert in analyzing user queries to identify and explicitly request '
-            'missing parameters needed for precise maneuver configuration.'
-        ),
+        backstory=('Expert in analyzing user queries to identify and explicitly request missing parameters needed for precise maneuver configuration.'),
         verbose=True,
         allow_delegation=False,
     )
@@ -133,10 +126,7 @@ def create_agents() -> list:
     driver_agent = Agent(
         role='Maneuver Generation Engineer',
         goal='Create technically sound maneuver configurations',
-        backstory=(
-            'Skilled in translating operational requirements into precise '
-            'maneuver specifications using domain knowledge.'
-        ),
+        backstory=('Skilled in translating operational requirements into precise maneuver specifications using domain knowledge.'),
         verbose=True,
         allow_delegation=False,
     )
@@ -144,10 +134,7 @@ def create_agents() -> list:
     validator_agent = Agent(
         role='Maneuver Quality Assurance',
         goal='Ensure safety and executability of maneuvers',
-        backstory=(
-            'Meticulous validator with expertise in operational constraints '
-            'and safety protocols for vehicle maneuvers.'
-        ),
+        backstory=('Meticulous validator with expertise in operational constraints and safety protocols for vehicle maneuvers.'),
         verbose=True,
         allow_delegation=False,
     )
@@ -167,28 +154,14 @@ def create_tasks(iteration_id: int, output_dir: str) -> list:
         list: List containing Enrich Query, Create Maneuver, and Validate Maneuver Tasks.
     """
     # Creating unique output file paths
-    enrich_query_output = os.path.join(
-        output_dir, f'enriched_query_{iteration_id}.txt'
-    )
-    create_maneuver_output = os.path.join(
-        output_dir, f'raw_maneuver_{iteration_id}.json'
-    )
-    validate_maneuver_output = os.path.join(
-        output_dir, f'validated_maneuver_{iteration_id}.json'
-    )
+    enrich_query_output = os.path.join(output_dir, f'enriched_query_{iteration_id}.txt')
+    create_maneuver_output = os.path.join(output_dir, f'raw_maneuver_{iteration_id}.json')
+    validate_maneuver_output = os.path.join(output_dir, f'validated_maneuver_{iteration_id}.json')
 
     # Creating Tasks with Pydantic Integration
     enrich_query_task = Task(
-        description=(
-            'Analyze and enrich the user request: {user_input}\n'
-            'System requirements: {system_prompt}\n'
-            'Identify missing parameters and request clarification or '
-            'provide reasonable assumptions for missing values.'
-        ),
-        expected_output=(
-            'Structured query containing all parameters required for '
-            'maneuver generation in key:value format.'
-        ),
+        description=('Analyze and enrich the user request: {user_input}\nSystem requirements: {system_prompt}\nIdentify missing parameters and request clarification or provide reasonable assumptions for missing values.'),
+        expected_output=('Structured query containing all parameters required for maneuver generation in key:value format.'),
         agent=create_agents()[0],
         output_file=enrich_query_output,
     )
@@ -271,9 +244,7 @@ def generate_and_enqueue(args, iteration_id, output_dir):
         # Start the Crew process
         crew.kickoff(inputs=process_inputs)
 
-        logging.info(
-            f'✅ Iteration {iteration_id}: Validated maneuver generated successfully'
-        )
+        logging.info(f'✅ Iteration {iteration_id}: Validated maneuver generated successfully')
 
         # Read the validated maneuver from file
         validate_maneuver_task = tasks[2]  # The third task is validation
@@ -283,20 +254,14 @@ def generate_and_enqueue(args, iteration_id, output_dir):
         # Push to Redis if in online mode
         if args.mode == 'online' and args.redis_queue and args.redis_client:
             args.redis_client.rpush(args.redis_queue, maneuver_json)
-            logging.info(
-                f"✅ Iteration {iteration_id}: Maneuver pushed to Redis queue '{args.redis_queue}'"
-            )
+            logging.info(f"✅ Iteration {iteration_id}: Maneuver pushed to Redis queue '{args.redis_queue}'")
         else:
-            logging.warning(
-                f'Iteration {iteration_id}: Redis client not available. Maneuver not enqueued.'
-            )
+            logging.warning(f'Iteration {iteration_id}: Redis client not available. Maneuver not enqueued.')
 
     except ValidationError as ve:
         logging.error(f'Validation Error in iteration {iteration_id}: {ve}')
     except Exception as e:
-        logging.error(
-            f'Failed to generate maneuver in iteration {iteration_id}: {e}'
-        )
+        logging.error(f'Failed to generate maneuver in iteration {iteration_id}: {e}')
 
 
 def main():
@@ -305,9 +270,7 @@ def main():
     # Connect to Redis if in online mode
     if args.mode == 'online':
         try:
-            redis_client = connect_redis(
-                args.redis_host, args.redis_port, args.redis_db
-            )
+            redis_client = connect_redis(args.redis_host, args.redis_port, args.redis_db)
             args.redis_client = redis_client  # Attach to args for later use
         except Exception:
             logging.error('Exiting due to Redis connection failure.')
@@ -320,23 +283,15 @@ def main():
     os.makedirs(output_base_dir, exist_ok=True)
 
     try:
-        logging.info(
-            f'Starting {args.mode} mode with {args.iterations} iterations.'
-        )
+        logging.info(f'Starting {args.mode} mode with {args.iterations} iterations.')
 
         with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
             # Prepare a list of futures
             futures = []
             for i in range(1, args.iterations + 1):
-                iteration_output_dir = os.path.join(
-                    output_base_dir, f'iteration_{i}'
-                )
+                iteration_output_dir = os.path.join(output_base_dir, f'iteration_{i}')
                 os.makedirs(iteration_output_dir, exist_ok=True)
-                futures.append(
-                    executor.submit(
-                        generate_and_enqueue, args, i, iteration_output_dir
-                    )
-                )
+                futures.append(executor.submit(generate_and_enqueue, args, i, iteration_output_dir))
 
             # Optional: Use tqdm to display progress
             for future in tqdm(
@@ -346,9 +301,7 @@ def main():
             ):
                 pass  # All logging is handled within generate_and_enqueue
 
-        logging.info(
-            f'All {args.iterations} iterations completed successfully.'
-        )
+        logging.info(f'All {args.iterations} iterations completed successfully.')
 
     except KeyboardInterrupt:
         logging.info('Orchestrator interrupted by user.')

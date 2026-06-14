@@ -12,9 +12,8 @@ from typing import Optional
 import carla
 import pygame
 import redis
-from pydantic import ValidationError
-
 from common.config import ManeuverParameters, PhaseParameters
+from pydantic import ValidationError
 
 
 def load_maneuver_from_orchestrator(world) -> Optional[ManeuverParameters]:
@@ -74,9 +73,7 @@ def load_latest_maneuver_parameters(
     except ValidationError as ve:
         logging.error(f"Pydantic validation error for '{latest_file}': {ve}")
     except Exception as e:
-        logging.error(
-            f'Unexpected error while loading maneuver parameters: {e}'
-        )
+        logging.error(f'Unexpected error while loading maneuver parameters: {e}')
 
     return None
 
@@ -101,9 +98,7 @@ class JTurnManeuver:
         self.save = save
         self.online = online
         if self.online and self.params is None:
-            logging.error(
-                'Online Mode: No ManeuverParameters provided externally.'
-            )
+            logging.error('Online Mode: No ManeuverParameters provided externally.')
             raise ValueError('Online Mode requires ManeuverParameters.')
         self.vehicle = world.player
         self.control = carla.VehicleControl()
@@ -119,13 +114,9 @@ class JTurnManeuver:
         """
         if self.online:
             self.params = maneuver_parameters
-            logging.info(
-                'Online Mode: ManeuverParameters updated dynamically.'
-            )
+            logging.info('Online Mode: ManeuverParameters updated dynamically.')
         else:
-            logging.warning(
-                'Attempted to set ManeuverParameters in Offline Mode. Operation ignored.'
-            )
+            logging.warning('Attempted to set ManeuverParameters in Offline Mode. Operation ignored.')
 
     def start(self, current_time):
         self.start_time = current_time
@@ -135,15 +126,11 @@ class JTurnManeuver:
         logging.info('Starting J-turn')
 
     def update(self, current_time):
-        elapsed = (
-            current_time - self.start_time
-        ) / 1000.0  # Convert ms to seconds
+        elapsed = (current_time - self.start_time) / 1000.0  # Convert ms to seconds
 
         try:
             current_phase_key = f'phase_{self.phase}'
-            phase_params: PhaseParameters = getattr(
-                self.params, current_phase_key
-            )
+            phase_params: PhaseParameters = getattr(self.params, current_phase_key)
 
             if elapsed < phase_params.duration:
                 # Verify vehicle exists and is valid
@@ -174,9 +161,7 @@ Phase {self.phase} State:
                     self.vehicle.apply_control(self.control)
                     # Verify control was applied
                     actual_control = self.vehicle.get_control()
-                    logging.info(
-                        f'Applied controls verified: throttle={actual_control.throttle:.2f}, steer={actual_control.steer:.2f}'
-                    )
+                    logging.info(f'Applied controls verified: throttle={actual_control.throttle:.2f}, steer={actual_control.steer:.2f}')
                 except Exception as e:
                     logging.error(f'Failed to apply vehicle control: {e}')
                     return False
@@ -252,9 +237,7 @@ Phase {self.phase} State:
         file_path = self.base_dir / f'j_turn_{start_datetime_str}.csv'
         file_path.parent.mkdir(parents=True, exist_ok=True)
         with open(file_path, 'w') as file_handle:
-            csv_writer = csv.DictWriter(
-                file_handle, fieldnames=points[0].keys()
-            )
+            csv_writer = csv.DictWriter(file_handle, fieldnames=points[0].keys())
             csv_writer.writeheader()
             csv_writer.writerows(points)
 
@@ -278,9 +261,7 @@ Phase {self.phase} State:
                 brake = phase['brake']
                 duration = phase['duration']
 
-                logging.info(
-                    f'Executing {phase_name}: Throttle={throttle}, Steering Angle={steering_angle}, Reverse={reverse}, Brake={brake}, Duration={duration}s'
-                )
+                logging.info(f'Executing {phase_name}: Throttle={throttle}, Steering Angle={steering_angle}, Reverse={reverse}, Brake={brake}, Duration={duration}s')
                 # Apply controls to the vehicle in CARLA
                 control = carla.VehicleControl(
                     throttle=throttle,
@@ -443,9 +424,7 @@ class DonutManeuver:
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description='Maneuvers Executor for CARLA'
-    )
+    parser = argparse.ArgumentParser(description='Maneuvers Executor for CARLA')
     parser.add_argument(
         '--mode',
         choices=['offline', 'online'],
@@ -479,16 +458,11 @@ def parse_arguments():
         default='./logs',
         help='Directory to save trajectories (default: ./logs)',
     )
-    parser.add_argument(
-        '--save', action='store_true', help='Enable trajectory saving'
-    )
+    parser.add_argument('--save', action='store_true', help='Enable trajectory saving')
     parser.add_argument(
         '--params',
         default=None,
-        help=(
-            'Path to a validated maneuver JSON file (offline mode). '
-            "Defaults to 'validated_maneuver.json' in the current directory."
-        ),
+        help=("Path to a validated maneuver JSON file (offline mode). Defaults to 'validated_maneuver.json' in the current directory."),
     )
     return parser.parse_args()
 
@@ -512,12 +486,8 @@ def redis_listener(redis_client, queue_name, local_queue):
             _, data = redis_client.blpop(queue_name)
             maneuver_json = data.decode('utf-8')
             try:
-                maneuver = ManeuverParameters.model_validate_json(
-                    maneuver_json
-                )
-                logging.debug(
-                    f'Received Maneuver Parameters:\n{maneuver.model_dump_json(indent=2)}'
-                )
+                maneuver = ManeuverParameters.model_validate_json(maneuver_json)
+                logging.debug(f'Received Maneuver Parameters:\n{maneuver.model_dump_json(indent=2)}')
                 local_queue.put(maneuver)
             except ValidationError as ve:
                 logging.error(f'Pydantic validation error: {ve}')
@@ -525,9 +495,7 @@ def redis_listener(redis_client, queue_name, local_queue):
         logging.error(f'Redis listener encountered an error: {e}')
 
 
-def execute_maneuver(
-    maneuver_params: ManeuverParameters, base_dir: str, save_data: bool
-):
+def execute_maneuver(maneuver_params: ManeuverParameters, base_dir: str, save_data: bool):
     """
     Initializes and executes the JTurnManeuver with the provided parameters.
     """
@@ -595,9 +563,7 @@ def main():
     )
 
     # Initialize Redis connection
-    redis_client = connect_to_redis(
-        args.redis_host, args.redis_port, args.redis_db
-    )
+    redis_client = connect_to_redis(args.redis_host, args.redis_port, args.redis_db)
     if not redis_client:
         logging.error('Exiting due to Redis connection failure.')
         return
@@ -623,9 +589,7 @@ def main():
             daemon=True,
         )
         listener_thread.start()
-        logging.info(
-            f"Started Redis listener thread on queue '{args.maneuver_queue}'"
-        )
+        logging.info(f"Started Redis listener thread on queue '{args.maneuver_queue}'")
 
     try:
         while True:
@@ -634,20 +598,11 @@ def main():
                 params_path = args.params or 'validated_maneuver.json'
                 try:
                     with open(params_path, 'r') as f:
-                        params = ManeuverParameters.model_validate_json(
-                            f.read()
-                        )
-                        logging.info(
-                            f"Loaded maneuver parameters from '{params_path}'"
-                        )
-                        logging.debug(
-                            f'Maneuver Parameters:\n{params.model_dump_json(indent=2)}'
-                        )
+                        params = ManeuverParameters.model_validate_json(f.read())
+                        logging.info(f"Loaded maneuver parameters from '{params_path}'")
+                        logging.debug(f'Maneuver Parameters:\n{params.model_dump_json(indent=2)}')
                 except FileNotFoundError:
-                    logging.error(
-                        f"'{params_path}' not found. If using the orchestrator, "
-                        "pass --params maneuver_outputs/iteration_X/validated_maneuver_X.json."
-                    )
+                    logging.error(f"'{params_path}' not found. If using the orchestrator, pass --params maneuver_outputs/iteration_X/validated_maneuver_X.json.")
                     time.sleep(1)
                     continue
                 except ValidationError as ve:
@@ -661,21 +616,15 @@ def main():
             elif args.mode == 'online':
                 try:
                     # Wait for a maneuver to be available in the queue
-                    params = maneuver_queue.get(
-                        timeout=30
-                    )  # Adjust timeout as needed
+                    params = maneuver_queue.get(timeout=30)  # Adjust timeout as needed
                     logging.info('Starting execution of received maneuver')
 
                     # Execute the maneuver
                     execute_maneuver(params, args.base_dir, args.save)
                 except Empty:
-                    logging.warning(
-                        'No maneuver received within the timeout period.'
-                    )
+                    logging.warning('No maneuver received within the timeout period.')
                 except ValidationError as ve:
-                    logging.error(
-                        f'Pydantic validation error during maneuver execution: {ve}'
-                    )
+                    logging.error(f'Pydantic validation error during maneuver execution: {ve}')
                 except Exception as e:
                     logging.error(f'Error during maneuver execution: {e}')
 
