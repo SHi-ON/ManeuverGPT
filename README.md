@@ -15,6 +15,9 @@
   <a href="https://shi-on.github.io/ManeuverGPT/" target="_blank">
     <img src="https://img.shields.io/badge/Website-ManeuverGPT-1f4b99.svg" alt="Project Website">
   </a>
+  <a href="https://doi.org/10.5281/zenodo.20693680" target="_blank">
+    <img src="https://zenodo.org/badge/941682421.svg" alt="DOI">
+  </a>
 </p>
 
 <h3 align="center">Agentic Control for Safe Autonomous Stunt Maneuvers</h3>
