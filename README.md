@@ -34,7 +34,9 @@
 📣 **Announcements**:
 
 - **June 2026 — Version 1.4.0 released**  
-  Version 1.4.0 is now available with important quality and release improvements. See the GitHub Release [here](https://github.com/SHi-ON/ManeuverGPT/releases/latest).
+  Version 1.4.0 is now available with important quality and release improvements. See the GitHub Release [here](https://github.com/SHi-ON/ManeuverGPT/releases/tag/v1.4.0).
+- **January 2026 — Version 1.3.1 released**  
+  Version 1.3.1 released with enhanced visualization and coordinate transformations. See the GitHub Release [here](https://github.com/SHi-ON/ManeuverGPT/releases/tag/v1.3.1).
 - **July 2025 — Paper updated**  
   The paper has been updated for the final submission to IROS 2025. See the updated version [here](https://github.com/SHi-ON/ManeuverGPT/blob/main/ManeuverGPT.pdf).
 - **June 2025 — Paper Accepted to IROS 2025! 🎉**  
