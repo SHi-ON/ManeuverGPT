@@ -9,6 +9,10 @@
     <img src="https://img.shields.io/badge/YouTube-FF0000?style=flat&logo=youtube&logoColor=white&labelColor=black&borderRadius=20" alt="YouTube Badge">
   </a>
   
+  <a href="https://ieeexplore.ieee.org/document/11246539" target="_blank">
+    <img src="https://img.shields.io/badge/IEEE%20Xplore-11246539-00629B?style=flat&logo=ieee&logoColor=white" alt="IEEE Xplore Badge">
+  </a>
+
   <a href="https://arxiv.org/abs/2503.09035" target="_blank">
     <img src="https://img.shields.io/badge/arXiv-2503.09035-b31b1b.svg" alt="YouTube Badge">
   </a>
